@@ -1,0 +1,73 @@
+{% extends "layouts/base-fullscreen.html" %}
+
+{% block title %} Sign IN {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <section class="bg-soft d-flex align-items-center justify-content-center"  style="margin-top:120px; margin-bottom:120px">
+        <div class="container">
+            <div class="row justify-content-center form-bg-image">
+                <div class="col-12 d-flex align-items-center justify-content-center">
+                    <div class="bg-white shadow-soft border rounded border-light p-4 p-lg-5 w-100 fmxw-500">
+                        <div class="text-center text-md-center mt-md-0">
+                            <h1 class="mb-0 h3">
+                                Super Loud
+                            </h1>
+                            <br>
+                                {% if msg %}
+                                <span class="mb-0" style="color:red;">{{ msg | safe }}</span>  
+                                {% else %}       
+                                <span>Please enter your credentials</span>
+                                {% endif %} 
+                        </div>
+                        <form role="form" method="post" action="">
+
+                            {% csrf_token %}
+                            
+                            <!-- Form -->
+                            <div class="form-group mb-4">
+                                <!-- <label for="email">Email</label> -->
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1"><span class="fa fa-user"></span></span>
+                                    {{ form.email }}
+                                </div>  
+                            </div>
+                            <!-- End of Form -->
+                            <div class="form-group">
+                                <!-- Form -->
+                                <div class="form-group mb-4">
+                                    <!-- <label for="password">Password</label> -->
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon2"><span class="fa fa-unlock-alt"></span></span>
+                                        {{ form.password }}
+                                    </div>  
+                                </div>
+                                <!-- End of Form -->
+                                <div class="d-grid">
+                                    <div class="d-grid mb-1">
+                                        <button type="submit" name="login" class="btn btn-dark">Sign in</button>
+                                    </div>
+
+                                    <div class="d-flex justify-content-center mb-4">
+                                        <a href="{% url 'reset1' %}">Forgot Password?</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                                    <div class="d-grid">
+                                        <a class="btn btn-dark" href="{% url 'register' %}">Register</a>
+                                    </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

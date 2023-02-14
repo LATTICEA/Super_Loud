@@ -1,0 +1,159 @@
+{% extends "layouts/base-presentation.html" %}
+
+{% block title %} Presentation {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    {% load static %}
+    <main>
+        <!-- Hero -->
+        <section class="section-header overflow-hidden bg-primary text-white" style="padding:0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <img src="{% static 'assets/img/brand/Super Loud Logo-A10.png' %}">
+                        <div class="centered" style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+                            <h1 class="fw-bolder centered display-1" style="font-family:impact,sans-serif;">Super Loud</h1><h1>Data, heard.</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <figure class="position-absolute bottom-0 left-0 w-100 d-none d-md-block mb-n2">
+                <svg class="fill-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 185.4">
+                    <path d="M3000,0v185.4H0V0c496.4,115.6,996.4,173.4,1500,173.4S2503.6,115.6,3000,0z"></path>
+                </svg>
+            </figure>     
+        </section>
+
+        <section class="section section-lg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-sm-6 col-lg-6 mb-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body card-click rounded">
+                                <a href="#valuable_insights">
+                                    <div class="px-3 px-lg-4 text-center">
+                                        <span class="icon icon-lg mb-4"><span class="fa fa-money"></span></span>
+                                        <h5 class="fw-bold text-primary">Valuable Insights</h5>
+                                        <p style="margin-bottom:0;">Whether you're hiring or looking to be hired, Super Loud surfaces insights so you can hold an intelligent conversation backed by data.</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-6 mb-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body card-click rounded">
+                                <a href="#reliable_information">
+                                    <div class="px-3 px-lg-4 text-center">
+                                        <span class="icon icon-lg mb-4"><span class="fa fa-code"></span></span>
+                                        <h5 class="fw-bold text-primary">Reliable Information</h5>
+                                        <p style="margin-bottom:0;">Our data engineering team thrives on accuracy. Anything that doesn't pass the sniff test is reevaluated and either fixed or recycled.</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-6 mb-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body card-click rounded">
+                                <a href="#obvious_administration">
+                                    <div class="px-3 px-lg-4 text-center">
+                                        <span class="icon icon-lg mb-4"><span class="fa fa-coffee"></span></span>
+                                        <h5 class="fw-bold text-primary">Simple Management</h5>
+                                        <p style="margin-bottom:0;">Accounts with multiple users will have no problem managing permissions, adding new folks, reviewing transactions, and other admin stuff.</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-6 mb-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body card-click rounded">
+                                <a href="#customized_solutions">
+                                    <div class="px-3 px-lg-4 text-center">
+                                        <span class="icon icon-lg mb-4"><span class="fa fa-building-o"></span></span>
+                                        <h5 class="fw-bold text-primary">Customized Solutions</h5>
+                                        <p style="margin-bottom:0;">Not all you had hoped for? Feel free to reach out and let's work on what you need. We are customer obsessed and want what you want.</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-lg bg-dark">
+            <div class="container">
+                <div class="row justify-content-center text-center text-white mb-5">
+                    <div class="col-12 text-center">
+                        <img src="{% static 'assets/img/pages/demo_5.gif' %}">
+                        <p style="color:#364878">*Some features shown for are upgraded version only</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- <section class="section section-lg bg-dark" id="valuable_insights"> -->
+        <section class="section bg-white" id="valuable_insights">
+            <div class="container">
+                <div class="row justify-content-center text-center mb-5">
+                    <div class="col-12">
+                        <h2 class="h1 px-lg-5">Valuable Insights</h2>
+                        <p class="lead px-lg-4">
+                            Finding out how much an industry or job role is paying is no easy task. Yes, there are other platforms to help users find out what a job is paying however, these other sites are frequently inaccurate, difficult to understand, and hard to compare to other jobs. They require a tedious sign-in process, and you cannot bookmark jobs easily to track how industries have changed over time. Upgrade your account to access our predictive modeling so you can better understand the past, present, and future of the industry. <b style="color:#f3b773;">Super Loud does the heavy lifting of data scrubbing and analytics so you can just focus on the right information.</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section bg-dark" id="reliable_information">
+            <div class="container">
+                <div class="row justify-content-center text-white mb-5 mb-lg-6">
+                    <div class="col-12 text-center">
+                        <h2 class="h1 px-lg-5">Reliable Information</h2>
+                        <p class="lead px-lg-4">
+                            Super Loud strives to get our users only the most accurate data. We double, triple, and quadruple check our numbers. Not even Santa does that. For our analytics, we only publish our findings when we have a high degree of confidence. That means in the upgraded tier, of our <b style="color:#f3b773;">400K</b> available forecasts (with a goal of <b style="color:#f3b773;">1MM models</b> by the end of 2022), we have made sure they pass an acceptable margin of error during their back-testing stage. If they failed during validation, we review the reason why and try to remedy the issue. Super Loud adopts the "garbage in, garbage out" mentality and wants to make sure our <b style="color:#f3b773;">users can trust our data.</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section bg-white" id="obvious_administration">
+            <div class="container">
+                <div class="row justify-content-center text-center mb-5">
+                    <div class="col-12">
+                        <h2 class="h1 px-lg-5">Simple Management</h2>
+                        <p class="lead px-lg-4">
+                             Need to manage multiple users? <b style="color:#f3b773;">Done.</b> Need multiple admins? <b style="color:#f3b773;">Done.</b> Need to delete a user? <b style="color:#f3b773;">Done.</b> Need to see all past transactions, upcoming bills, and user changes in your account? <b style="color:#f3b773;">Done.</b> Need to delete your account without having to call customer support and listen to crackly elevator music for an hour? <b style="color:#f3b773;">Done.</b> Doing tedious admin work isn't the point of our platform, so let's leave that out of the picture and keep it simple. Our Users and Transaction pages have all the information you need to make sure there are no surprises.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section bg-dark" id="customized_solutions">
+            <div class="container">
+                <div class="row justify-content-center text-white mb-5 mb-lg-6">
+                    <div class="col-12 text-center">
+                        <h2 class="h1 px-lg-5">Customized Solutions</h2>
+                        <p class="lead px-lg-4">
+                            We want to make sure our users are getting a good value out of what Super Loud offers. If there's something you feel is missing, just reach out and let us know. Furthermore, if you want to integrate with the Super Loud datasets and predictions, <b style="color:#f3b773;">let's connect and see what we can do for you.</b> Reach out to us at <a class="text-white text-underline" href="mailto:<Super Loud Support> support@superloud.com">support@superloud.com</a> for inquires.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

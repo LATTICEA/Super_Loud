@@ -1,0 +1,112 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Transactions {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+  {% if retval|length > 0 %}
+    <div class="card card-body shadow-sm table-wrapper table-responsive">
+      <table id="user-table" class="table user-table table-hover align-items-center">
+          <thead class="thead-light">
+              <tr>
+                  <th>Line Item</th>						
+                  <th>Date Occured</th>
+                  <th>Due Date</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Details</th>
+              </tr>
+          </thead>
+          <tbody>
+              <!-- Upcoming Transaction -->
+              {% if upcoming|length > 0 %}
+              <tr>
+                  <td><span class="fw-normal">Upcoming</span></td>
+                  <td><span class="fw-normal">{{upcoming.start}}</span></td>
+                  <td><span class="fw-normal">{{upcoming.end}}</span></td>
+                  <td><span class="fw-bold">${{upcoming.amount_due|floatformat:2}}</span></td>
+                  <td><span class="fw-bold text-warning">Not Paid</span></td>
+                  <td></td>
+              </tr> 
+              {% endif %}
+
+
+              {% if deleted_users|length > 0 %}
+              {% for z in deleted_users %}
+              <tr>
+                  <td><span class="fw-normal">{{z.username}}</span></td>
+                  <td><span class="fw-normal"></span>Created at: {{z.created_at}}</td>
+                  <td><span class="fw-normal"></span>Deleted at: {{z.deleted_at}}</td>
+                  <td><span class="fw-bold">{{z.username}}</span></td>
+                  <td><span class="fw-bold text-warning">{{z.email}}</span></td>
+                  <td></td>
+              </tr> 
+              {% endfor %}
+              {% endif %}
+
+
+              <!-- Credit Balance -->
+              {% if balance > 0 %}
+              <tr>
+                  <td><span class="fw-normal">Credit</span></td>
+                  <td><span class="fw-normal"></span>To be applied toward future invoices</td>
+                  <td><span class="fw-normal"></span></td>
+                  <td><span class="fw-bold">$({{balance|floatformat:2}})</span></td>
+                  <td><span class="fw-bold text-warning"></span></td>
+                  <td></td>
+              </tr> 
+              {% endif %}
+
+              {% for i in retval %}
+              {% if i.status is None %}
+              <tr>
+                  <td><span class="fw-normal text-danger">{{i.desc}}</span></td>
+                  <td><span class="fw-normal">{{i.start}}</span></td>
+                  <td><span></span></td>
+                  <td><span></span></td>
+                  <td><span></span></td>
+                  <td><span class="fw-normal">{{i.id}}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td><span class="fw-normal">{{i.desc2}}</span></td>
+                  <td><span class="fw-normal">{{i.start}}</span></td>                        
+                  <td><span class="fw-normal">{{i.end}}</span></td>
+                  <td><span class="fw-bold">${{i.total|floatformat:2}}</span></td>
+                  <td><span class="fw-bold text-success">{{i.status}}</span></td>
+                  <td>
+                    <a class="dropdown-item rounded" href="{{i.id}}" target="_blank"><span class="fa fa-eye me-2"></span>View Invoice</a>
+                  </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
+  {% endif %}
+  {% if retval|length == 0 %}
+  <div class="col-12 col-sm-6 col-xl-4 mb-4 mx-auto">
+      <div class="card shadow-sm">
+          <div class="card-body">
+              <div class="d-flex justify-content-center">
+                  There are not transactions yet!
+              </div>
+          </div>
+      </div>
+  </div>
+  {% endif %}
+
+<script>
+$(document).ready(function () {
+    $('#user-table').DataTable({
+        "order": [[ 1, "desc" ]]
+    });
+});
+</script>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

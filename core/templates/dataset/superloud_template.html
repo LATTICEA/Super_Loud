@@ -1,0 +1,1918 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Widgets {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+<style>
+    .ct-chart-line{
+        background-color: grey;
+    }
+</style>
+
+{% block content %}
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/blob-polyfill/4.0.20200601/Blob.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.28.0/js/canvas-to-blob.min.js" integrity="sha512-Q0RYciuNUJLzUgA9T0A0yj1A5wR+rM7MDr3hKBJuNBaSW5O2TqRyBMMLswe7Z/M9czXRnD/5mh1/xQpDpxFZaA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+
+    <link type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" rel="stylesheet">
+
+    <link type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet" crossorigin="anonymous" rel="stylesheet">
+
+    {% load static %}
+    <link type="text/css" href="{% static 'assets/css/toggle.css' %}" rel="stylesheet">
+    <script src="{% static 'assets/js/toggle.js' %}"></script>
+    <script src="{% static 'assets/js/genGraphs.js' %}"></script>
+
+    <!-- D3 -->
+    <script src="https://d3js.org/d3.v7.min.js" crossorigin="anonymous"></script>
+    <!-- DOM to image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.9.0/html-to-image.min.js" crossorigin="anonymous"></script>
+    <!-- Wage graph -->
+    <link rel="stylesheet" href="{% static 'assets/css/wage-graph.css' %}"/>
+
+    <script src="{% static 'assets/js/graph-common.js' %}"></script>
+    <script src="{% static 'assets/js/line-graph.js' %}"></script>
+    <script src="{% static 'assets/js/wage-graph.js' %}"></script>
+    <script src="{% static 'assets/js/wage-umemployment-graph.js' %}"></script>
+
+    {% if datasets_view_hourly is not null %}
+    <div class="row">
+        <div class="d-flex justify-content-center">
+            <button class="btn btn-primary" type="button"  onclick="render_add_form()" style="margin-right:1px;">
+                Add Dataset
+            </button>
+            <input id="hourly_salary_toggle" type="checkbox" checked data-toggle="toggle" data-on="Hourly" data-off="Salary" style="border: 0.0625rem solid transparent;">
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        $(function() {
+            $('#hourly_salary_toggle').bootstrapToggle('on');
+            
+            $('#hourly_salary_toggle').change(function() {
+                if($(this).prop('checked')){
+                    // Cards
+                    document.getElementById("summary_cards_hourly").style.display = "";
+                    document.getElementById("summary_cards_salary").style.display = "none";
+
+                    // Graphs
+                    document.getElementById("hourly").style.display = "block";
+                    document.getElementById("salary").style.display = "none";
+
+                    // Data Table
+                    document.getElementById("data-table-hourly").style.display = "block";
+                    document.getElementById("data-table-salary").style.display = "none";
+                } else {
+                    // Cards
+                    document.getElementById("summary_cards_hourly").style.display = "none";
+                    document.getElementById("summary_cards_salary").style.display = "";
+
+                    // Graphs
+                    document.getElementById("hourly").style.display = "none";
+                    document.getElementById("salary").style.display = "block";
+
+                    // Data Table
+                    document.getElementById("data-table-hourly").style.display = "none";
+                    document.getElementById("data-table-salary").style.display = "block";
+                }
+            })
+
+            $('#graphDiscoToggle').bootstrapToggle('on');
+            
+            $('#graphDiscoToggle').change(function() {
+                if($(this).prop('checked')){
+                    // Graphs
+                    document.getElementById("graphDiscoHourly").style.display = "block";
+                    document.getElementById("graphDiscoSalary").style.display = "none";
+                } else {
+                    // Graphs
+                    document.getElementById("graphDiscoHourly").style.display = "none";
+                    document.getElementById("graphDiscoSalary").style.display = "block";
+                }
+            })
+
+
+            $('#graphDiscoToggleCreate').bootstrapToggle('on');
+            
+            $('#graphDiscoToggleCreate').change(function() {
+                if($(this).prop('checked')){
+                    // Graphs
+                    document.getElementById("graphDiscoHourlyCreate").style.display = "block";
+                    document.getElementById("graphDiscoSalaryCreate").style.display = "none";
+                } else {
+                    // Graphs
+                    document.getElementById("graphDiscoHourlyCreate").style.display = "none";
+                    document.getElementById("graphDiscoSalaryCreate").style.display = "block";
+                }
+            })
+        })
+    </script>
+
+    {% if datasets_view_hourly is null and subobj.active %}
+    <div class="col-xl-5 col-md-4 col-sm-2 col-xs-5"></div>
+    <div class="row justify-content-center">
+        <button class="btn btn-primary col-xl-2 col-md-4 col-sm-8 col-xs-2" type="button" data-bs-toggle="modal" data-bs-target="#myModal1" data-bs-backdrop="static">
+            Click here create a dataset
+        </button>
+    </div>
+    <div class="col-xl-5 col-md-4 col-sm-2 col-xs-5"></div>
+    {% elif datasets_view_hourly is not null and subobj.active == False %}
+    <div class="row justify-content-md-center">
+        <button class="btn btn-primary col-3" type="button" data-bs-toggle="modal" data-bs-target="#myModal1" data-bs-backdrop="static">
+            Please subscribe before creating dataset
+        </button>
+    </div>
+    {% endif %}
+
+
+    <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="overflow-y:auto;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+ 
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title" id="myModalLabel" style="padding-left:1rem;">Create Dataset</h4>
+                </div>      
+
+                <div class="modal-body">
+                    <div class="row justify-content-center">
+                        <button class="btn btn-primary col-11" id="pre_defined" type="button">
+                            Pre-Defined Roles
+                        </button>
+                    </div>
+                    <br>
+                    <div class="row justify-content-center">
+                        <button class="btn btn-primary col-11" id="create_new" type="button">
+                            Create New Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-default2" tabindex="-1" role="dialog" aria-labelledby="modal-default2" aria-hidden="true" data-bs-backdrop="static" style="overflow-y:auto;">
+        <div class="modal-dialog modal-dialog-centered modal-w" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title" id="myModalLabel" style="padding-left:1rem;">Pre-Defined Roles</h4>
+                </div>   
+
+                <form method="POST" style="display: none;" id="sub-form">{% csrf_token %}</form>
+                <input type="hidden" name="skills" value="N" id="skills" form="sub-form" autocomplete="off">
+                <input type="hidden" name="sels" value="" id="sels-hid" form="sub-form" autocomplete="off">
+                <input type="hidden" name="edit" value="N" id="edit-hid" form="sub-form" autocomplete="off">
+                <!-- <div class="modal-header"> -->
+                    <!-- <input class="form-control" placeholder="Name of Dataset" value="" type="text" name="name" id="name" form="sub-form" required autocomplete="off"> -->
+                <!-- </div> -->
+
+                {% if subobj.active %}
+
+                <!-- <div class="row"> -->
+                    <!-- <div class="d-flex justify-content-center mt-2"> -->
+                        <!-- <div class="d-flex align-items-center text-primary"> -->
+                            <!-- <span class="h5 fw-normal me-3 mt-2">County</span>   -->
+                            <!-- <div class="form-check form-switch"> -->
+                                <!-- <input type="hidden" form="sub-form" name="county_msa_switch_value" id="county_msa_switch_value" value="msa" autocomplete="off"> -->
+                                <!-- <input class="form-check-input" type="checkbox" id="county_msa_switch" autocomplete="off"> -->
+                                <!-- <label class="form-check-label" for="county_msa_switch"></label> -->
+                            <!-- </div>  -->
+                            <!-- <span class="h5 fw-normal ms-1 mt-2">Metro Area</span> -->
+                        <!-- </div> -->
+                    <!-- </div> -->
+                <!-- </div> -->
+
+                {% else %}
+                <div class="row">
+                    <div class="d-flex justify-content-center mt-2">
+                        <p>Upgrade your account to access Occupation level data</p>
+                        <input type="hidden" form="sub-form" name="ind_occ_switch_value" id="ind_occ_switch_value" value="industry" autocomplete="off">
+                    </div>
+                </div>
+                {% endif %}   
+
+                <div class="modal-body" id="filter-container">
+                    <input class="form-control" placeholder="Name of Dataset" value="" type="text" name="name" id="name" form="sub-form" required autocomplete="off">
+                    <br>
+
+                    <div id="state-container" class="field-w">
+                        State Name : <select form="sub-form" name="state" id="sel1" onchange="changeStateFuncMSA(this.value)" required autocomplete="off">
+                            <option value="">Select State</option>
+                            {% for i,j in states.items %}
+                            <option value="{{i}}--==--{{j}}">{{j}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="area-container" class="field-w"></div>
+                    <div id="industry-container" onchange="graphDisco()" class="field-w"></div>
+                    <div id="occupation-container" onchange="graphDiscoOcc()" class="field-w"></div>
+
+                    <button type="button" class="btn btn-primary" onclick="thisfunc()">Save</button>
+
+                    <div class="row" id="graphDiscoToggleRow" style="display: none;">
+                        <div class="d-flex justify-content-center">
+                            <input id="graphDiscoToggle" type="checkbox" checked data-toggle="toggle-2" data-on="Hourly" data-off="Salary" style="border: 0.0625rem solid transparent;">
+                        </div>
+                    </div>
+
+
+                    <!-- <div class="row" id="graphDiscoToggleRow" style="display: none;">
+                        <div class="d-flex justify-content-center">
+                            <input id="graphDiscoToggle" type="checkbox" checked data-toggle="toggle" data-on="Hourly" data-off="Salary" style="border: 0.0625rem solid transparent;">
+                        </div>
+                    </div> -->
+
+
+                    <div id="graphDiscoHourly"></div>
+                    <div id="graphDiscoSalary" style="display: none;"></div>
+                </div>
+
+
+                <script>
+
+                    $('#sel1').selectize({
+                        sortField: 'text'
+                    });
+
+                    state_container_options = 'State Name : <select form="sub-form" name="state" id="sel1" onchange="changeStateFuncMSA(this.value)" required autocomplete="off"><option value="">Select State</option>{% for i,j in states.items %}<option value="{{i}}--==--{{j}}">{{j}}</option>{% endfor %}</select>';
+                    state_container_options_msa = 'State Name : <select form="sub-form" name="state" id="sel1" onchange="changeStateFuncMSA(this.value)" required autocomplete="off"><option value="">Select State</option>{% for i,j in states.items %}<option value="{{i}}--==--{{j}}">{{j}}</option>{% endfor %}</select>';
+
+                    dicta = {};
+
+                    // function changeStateFunc(a){
+                    //     if(a != ""){
+                    //         temp = a.split("--==--");
+                    //         document.getElementById('industry-container').innerHTML = '';
+                    //         document.getElementById('occupation-container').innerHTML = '';
+                    //         document.getElementById("area-container").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                    //         $.get("/get-areas-from-state/"+temp[0],function (data){
+                    //             htmlAddition = "Area Name : <select form='sub-form' name='area' id='sel2' onchange=changeIndustryFunc(this.value) required autocomplete='off'><option value=''>Select Area Name</option>";
+                    //             for (i=0 ; i<data.length ; i++){
+                    //                 if (document.getElementById('edit-hid').value == 'Y'){
+                    //                     if (data[i]['id'] == document.getElementById('area-id').value){
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                     else{
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                 }
+                    //                 else{
+                    //                     htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                 }
+                    //             }
+                    //             htmlAddition += "</select>"
+                    //             document.getElementById("area-container").innerHTML = htmlAddition;
+                    //             $('#sel2').selectize({
+                    //                 sortField: 'text'
+                    //             });
+                    //         });
+                    //     }
+                    // }
+
+                    function changeStateFuncMSA(a){
+                        if(a != ""){
+                            temp = a.split("--==--");
+                            document.getElementById('industry-container').innerHTML = '';
+                            document.getElementById('occupation-container').innerHTML = '';
+                            document.getElementById("area-container").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                            $.get("/get-msa-from-state/"+temp[0],function (data){
+                                htmlAddition = "Metro Area : <select form='sub-form' name='msa' id='sel2' onchange=changeIndustryFuncMSA(this.value) required autocomplete='off'><option value=''>Select Metro Area</option>";
+                                for (i=0 ; i<data.length ; i++){
+                                    if (document.getElementById('edit-hid').value == 'Y'){
+                                        if (data[i]['id'] == document.getElementById('area-id').value){
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                                        }
+                                        else{
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                        }
+                                    }
+                                    else{
+                                        htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                    }
+                                }
+                                htmlAddition += "</select>"
+                                document.getElementById("area-container").innerHTML = htmlAddition;
+                                $('#sel2').selectize({
+                                    sortField: 'text'
+                                });
+                            });
+                        }
+                    }
+
+                    // function changeIndustryFunc(a){
+                    //     if(a != ""){
+                    //         temp = a.split("--==--");
+                    //         document.getElementById('occupation-container').innerHTML = '';
+                    //         document.getElementById("industry-container").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                    //         $.get("/get-industries-from-area/"+temp[0],function (data){
+                    //             descArr = [];
+                    //             if (data.length == 0){
+                    //                 document.getElementById("industry-container").innerHTML = '';
+                    //                 window.alert("No industry found against the selected area.");
+                    //                 return;
+                    //             }
+                    //             htmlAddition = "Industry Title : <select form='sub-form' name='industry' id='sel3' required autocomplete='off' onchange='itemClassAdd()' style='max-width:100%;'><option value=''>Select Industry</option>";
+                    //             for (i=0 ; i<data.length ; i++){
+                    //                 temp = [];
+
+                    //                 if (data[i]['cross_ref'] == 1) {
+                    //                     temp.push(true);
+                    //                 } else {
+                    //                     temp.push(false);
+                    //                 }
+
+                    //                 if (data[i]['forecastable'] == 1) {
+                    //                     temp.push(true);
+                    //                 } else {
+                    //                     temp.push(false);
+                    //                 }
+                    //                 descArr.push(data[i]['name']);
+                    //                 dicta[data[i]['name']] = temp;
+
+                    //                 if (document.getElementById('edit-hid').value == 'Y'){
+                    //                     if (data[i]['id'] == document.getElementById('industry-id').value){
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                     else{
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                 }
+                    //                 else{
+                    //                     htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                 }
+                    //             }
+                    //             htmlAddition += "</select>";
+
+                    //             document.getElementById("industry-container").innerHTML = htmlAddition;
+                    //             $('#sel3').selectize({
+                    //                 sortField: 'text',
+                    //                 maxOptions: 20000
+                    //             });
+                    //             setTimeout(function (){
+                    //                 a = document.getElementsByClassName("selectize-dropdown-content")[2];
+                    //                 a.style = "width:100%;";
+                    //                 $("#sel3-selectized").click();
+                    //                 setTimeout(function (){
+                    //                     b = document.getElementsByClassName("option");
+                    //                     for (j = 0 ; j < b.length ; j++){
+                    //                         temp = b[j].getAttribute("data-value").split("--==--")[1];
+                    //                         temp2 = dicta[temp];
+                    //                         if (null != temp2){
+                    //                             if (temp2[0]){
+                    //                                 b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                    //                             }
+                    //                             if (temp2[1]){
+                    //                                 b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                    //                             }
+                    //                         }
+                    //                     }
+                    //                     $("#sel3-selectized").click();
+                    //                 },1);
+                    //             },1);
+                    //         });
+                    //     }
+                    // }
+
+                    function changeIndustryFuncMSA(a){
+                        if(a != ""){
+                            response = a.split("--==--");
+                            // alert(response)
+                            document.getElementById('occupation-container').innerHTML = '';
+                            document.getElementById("industry-container").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                            $.get("/get-industries-from-msa/"+response[0],function (data){
+                                descArr = [];
+                                if (data.length == 0){
+                                    document.getElementById("industry-container").innerHTML = '';
+                                    window.alert("No industry found against the selected area.");
+                                    return;
+                                }
+                                htmlAddition = "Industry Title : <select form='sub-form' name='industry' id='sel3' required autocomplete='off' onchange='itemClassAdd();changeOccupationFuncMSA(this.value)' style='max-width:100%;'><option value=''>Select Industry</option>";
+                                for (i=0 ; i<data.length ; i++){
+                                    temp = [];
+
+                                    if (data[i]['cross_ref'] == 1) {
+                                        temp.push(true);
+                                    } else {
+                                        temp.push(false);
+                                    }
+
+                                    if (data[i]['forecastable'] == 1) {
+                                        temp.push(true);
+                                    } else {
+                                        temp.push(false);
+                                    }
+
+                                    if (data[i]['occupation'] == 1) {
+                                        temp.push(true);
+                                    } else {
+                                        temp.push(false);
+                                    }
+
+                                    descArr.push(data[i]['name']);
+                                    dicta[data[i]['name']] = temp;
+
+                                    if (document.getElementById('edit-hid').value == 'Y'){
+                                        if (data[i]['id'] == document.getElementById('industry-id').value){
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"--==--"+response[0]+"' selected>" + data[i]['name'] + "</option>"
+                                        }
+                                        else{
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"--==--"+response[0]+"'>" + data[i]['name'] + "</option>"
+                                        }
+                                    }
+                                    else{
+                                        htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"--==--"+response[0]+"'>" + data[i]['name'] + "</option>"
+                                    }
+                                }
+                                htmlAddition += "</select>";
+
+                                document.getElementById("industry-container").innerHTML = htmlAddition;
+                                $('#sel3').selectize({
+                                    sortField: 'text',
+                                    maxOptions: 20000
+                                });
+                                setTimeout(function (){
+                                    a = document.getElementsByClassName("selectize-dropdown-content")[2];
+                                    //a.classList.add("fa");
+                                    a.style = "width:100%;";
+                                    $("#sel3-selectized").click();
+                                    setTimeout(function (){
+                                        // $("#sel3-selectized").click();
+                                        b = document.getElementsByClassName("option");
+                                        for (j = 0 ; j < b.length ; j++){
+                                            temp = b[j].getAttribute("data-value").split("--==--")[1];
+                                            temp2 = dicta[temp];
+                                            if (null != temp2){
+                                                if (temp2[0]){
+                                                    b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                                                }
+                                                if (temp2[1]){
+                                                    b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                                                }
+                                                if (temp2[2]){
+                                                    b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf012;</span>"
+                                                }
+                                            }
+                                        }
+                                        $("#sel3-selectized").click();
+                                    },1);
+                                },1);
+                            });
+                        }
+                    }
+
+                    function changeOccupationFuncMSA(a){
+                        if(a != ""){
+                            temp = a.split("--==--");
+                            document.getElementById("occupation-container").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                            $.get("/get-occupations-from-msa/"+temp[2]+"/"+temp[0],function (data){
+                                descArr = [];
+                                if (data.length == 0){
+                                    document.getElementById("occupation-container").innerHTML = 'There is no occupation level data for the industry in this MSA';
+                                    // window.alert("No occupation found against the selected area.");
+                                    return;
+                                }
+                                htmlAddition = "Occupation Title (Optional): <select form='sub-form' name='occupation' id='sel4' required autocomplete='off' style='max-width:100%;'><option value=''>Select Occupation</option>";
+
+
+                                for (i=0 ; i<data.length ; i++){
+                                    // temp = [];
+
+                                    // if (data[i]['cross_ref'] == 1) {
+                                    //     temp.push(true);
+                                    // } else {
+                                    //     temp.push(false);
+                                    // }
+
+                                    // if (data[i]['forecastable'] == 1) {
+                                    //     temp.push(true);
+                                    // } else {
+                                    //     temp.push(false);
+                                    // }
+
+                                    descArr.push(data[i]['name']);
+                                    dicta[data[i]['name']] = temp;
+
+                                    if (document.getElementById('edit-hid').value == 'Y'){
+                                        if (data[i]['id'] == document.getElementById('occupation-id').value){
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                                        }
+                                        else{
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                        }
+                                    }
+                                    else{
+                                        htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                    }
+                                }
+                                htmlAddition += "</select>";
+
+                                htmlAddition += '<button class="btn btn-primary col-3" type="button" onclick="removeOcc()">Clear Occupation</button>'
+
+                                document.getElementById("occupation-container").innerHTML = htmlAddition;
+
+                                $('#sel4').selectize({
+                                    sortField: 'text',
+                                    maxOptions: 20000
+                                });
+                                a = document.getElementsByClassName("selectize-dropdown-content")[3];
+
+                                //a.classList.add("fa");
+                                a.style = "width:100%;";
+                                //$("#sel3-selectized").click();
+                                setTimeout(function (){
+                                    b = document.getElementsByClassName("option");
+                                    for (j = 0 ; j < b.length ; j++){
+                                        temp = b[j].getAttribute("data-value").split("--==--")[1];
+                                        // temp2 = dicta[temp];
+                                        // if (null != temp2){
+                                        //     if (temp2[0]){
+                                        //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                                        //     }
+                                        //     if (temp2[1]){
+                                        //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                                        //     }
+                                        // }
+                                    }
+                                    $("#sel4-selectized").click();
+                                },1);
+                            });
+                        }
+                    }
+
+                    function itemClassAdd(){
+                        b = document.getElementsByClassName("item")[2];
+                        temp = b.getAttribute("data-value").split("--==--")[1];
+                        temp2 = dicta[temp];
+                        if (null != temp2 && b.innerHTML.includes("fa-pull-right") == false){
+                            if (temp2[0]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                            }
+                            if (temp2[1]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                            }
+                            if (temp2[2]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf012;</span>"
+                            }
+                        }
+                    }
+
+                    function removeOcc() {
+                        document.getElementById("sel4").selectize.clear();
+                        graphDisco();
+                    }
+
+                </script>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link text-gray ms-auto" id="prev_modal2" data-bs-dismiss="modal" style="margin-left:0px;">Previous</button>
+                    <!-- <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal">Close</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <input type="hidden" id="area-id" value="">
+    <input type="hidden" id="industry-id" value="">
+    <input type="hidden" id="occupation-id" value="">
+    <script>
+        function thisfunc(){
+            if (
+                document.getElementById('name').value != "" 
+                && document.getElementById('sel1').value != "" 
+                && document.getElementById('sel2').value != "" 
+                && document.getElementById('sel3').value != "") {
+                    document.getElementById('sub-form').submit();
+            }
+            else {
+                window.alert('Please complete your dataset');
+            }
+        }
+
+        function render_add_form(){
+            document.getElementById("name").value = "";
+            document.getElementById("sels-hid").value = "";
+            document.getElementById("edit-hid").value = "N";
+            // document.getElementById("county_msa_switch_value").value = "msa";
+            document.getElementById("state-container").innerHTML = state_container_options;
+            {% if subobj.active %}
+            // document.getElementById("county_msa_switch").checked = false;
+            // document.getElementById("state-container").innerHTML = state_container_options_msa;
+            {% endif %}
+            
+            $('#sel1').selectize({
+                sortField: 'text'
+            });
+            document.getElementById('area-id').value = "";
+            document.getElementById("area-container").innerHTML = '';
+            document.getElementById('industry-id').value = "";
+            document.getElementById("industry-container").innerHTML = '';
+            document.getElementById("occupation-container").innerHTML = '';
+            document.getElementById("graphDiscoHourly").innerHTML = '';
+            document.getElementById("graphDiscoSalary").innerHTML = '';
+            // $("#modal-default2").modal("toggle");
+            $("#myModal1").modal("toggle");
+        }
+        
+        function render_edit_form(a,b,c,d,e,f,g){
+            console.log(a,b,c,d,e,f,g);
+
+            document.getElementById("name").value = a;
+            document.getElementById("sels-hid").value = b;
+            document.getElementById("edit-hid").value = "Y";
+            // document.getElementById("county_msa_switch_value").value = f;
+            if (f == "msa"){
+                // document.getElementById("county_msa_switch").checked = true;
+                document.getElementById("state-container").innerHTML = state_container_options_msa;
+            }
+            else{
+                document.getElementById("state-container").innerHTML = state_container_options;
+            }
+            // $('#sel1').selectize({
+            //     sortField: 'text'
+            // });
+            var options = document.getElementsByTagName("option");
+            // console.log(options.innerText)
+            for (i=0 ; i < options.length ; i++){
+                if (options[i].innerText == e) {
+                    // console.log(options[i]);
+                    options[i].setAttribute("selected","selected");
+                    temp = options[i].getAttribute("value");
+                    // console.log(temp);
+                    break;
+                }
+            }
+            $('#sel1').selectize({
+                sortField: 'text'
+            });
+            document.getElementById('area-id').value = c;
+            document.getElementById('industry-id').value = d;
+            document.getElementById('occupation-id').value = g;
+            if (f == "msa"){
+                if (g != "") {
+                    changeStateFuncMSA(temp);
+                    changeIndustryFuncMSA(c+"--==--"+"abc");
+                    changeOccupationFuncMSA(d+"--==--"+"abc"+"--==--"+c);
+                    // itemClassAdd();
+                } else {
+                    changeStateFuncMSA(temp);
+                    changeIndustryFuncMSA(c+"--==--"+"abc");
+                    // itemClassAdd();
+                }
+            } else{
+                changeStateFunc(temp);
+                changeIndustryFunc(c+"--==--"+"abc");
+                // itemClassAdd();
+            }
+            if (g != "") {
+                graphDiscoOcc(edit=true);
+            } else {
+                graphDisco(edit=true);
+            }
+            $("#modal-default2").modal("toggle");
+        }
+
+
+        
+        
+        function render_edit_form_create(a,b,c,d,e,f,g,h,i){
+            console.log('create','a',a,'b',b,'c',c,'d',d,'e',e,'f',f,'g',g,'h',h,'i',i);
+
+            // a = Dataset name
+            // b = dataset id
+            // c = MSA code
+            // d = industry id
+            // e = State name
+            // f = msa
+            // g = occupation id
+            // h = skills
+            // i = ???
+
+            document.getElementById("name_create").value = a;
+            document.getElementById("sels-hid-create").value = b;
+            document.getElementById("edit-hid-create").value = "Y";
+            // document.getElementById("county_msa_switch_value_create").value = f;
+            f = 'msa'
+            if (f == "msa"){
+                // document.getElementById("county_msa_switch_create").checked = true;
+                document.getElementById("state-container-create").innerHTML = state_container_options_msa_create;
+            }
+            else{
+                document.getElementById("state-container-create").innerHTML = state_container_options_create;
+            }
+            // $('#sel1').selectize({
+            //     sortField: 'text'
+            // });
+            var options = document.getElementsByTagName("option");
+            // console.log(options.innerText)
+            for (i=0 ; i < options.length ; i++){
+                if (options[i].innerText == e) {
+                    // console.log(options[i]);
+                    options[i].setAttribute("selected","selected");
+                    temp = options[i].getAttribute("value");
+                    console.log('temp',temp);
+                    console.log('c',c);
+                    break;
+                }
+            }
+            $('#selCreate1').selectize({
+                sortField: 'text'
+            });
+
+            document.getElementById('area-id-create').value = c;
+            document.getElementById('skills-id-create').value = h;
+
+            if (h != "") {
+                changeStateFuncMSACreate(temp);
+                changeSkillFuncMSACreate(c);
+                graphDiscoCreate(edit=true);
+            }
+
+            $("#modal-default3").modal("toggle");
+        }
+    </script>
+
+
+    <div class="modal fade" id="modal-default3" tabindex="-1" role="dialog" aria-labelledby="modal-default3" aria-hidden="true" data-bs-backdrop="static" style="overflow-y:auto;">
+        <div class="modal-dialog modal-dialog-centered modal-w" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title" id="myModalLabel" style="padding-left:1rem;">Create New Role</h4>
+                </div> 
+
+                <form method="POST" style="display: none;" id="sub-form-create">{% csrf_token %}</form>
+                <input type="hidden" name="skills-create" value="Y" id="skills-create" form="sub-form-create" autocomplete="off">
+                <input type="hidden" name="sels-create" value="" id="sels-hid-create" form="sub-form-create" autocomplete="off">
+                <input type="hidden" name="edit-create" value="N" id="edit-hid-create" form="sub-form-create" autocomplete="off">
+                <!-- <div class="modal-header"> -->
+                    <!-- <input class="form-control" placeholder="Name of Dataset" value="" type="text" name="name_create" id="name_create" form="sub-form-create" required autocomplete="off"> -->
+                <!-- </div> -->
+
+                {% if subobj.active %}
+                <!-- <div class="row"> -->
+                    <!-- <div class="d-flex justify-content-center mt-2"> -->
+                        <!-- <div class="d-flex align-items-center text-primary"> -->
+                            <!-- <span class="h5 fw-normal me-3 mt-2">County</span>   -->
+                            <!-- <div class="form-check form-switch"> -->
+                                <!-- <input type="hidden" form="sub-form-create" name="county_msa_switch_value_create" id="county_msa_switch_value_create" value="msa" autocomplete="off"> -->
+                                <!-- <input class="form-check-input" type="checkbox" id="county_msa_switch_create" autocomplete="off"> -->
+                                <!-- <label class="form-check-label" for="county_msa_switch_create"></label> -->
+                            <!-- </div>  -->
+                            <!-- <span class="h5 fw-normal ms-1 mt-2">Metro Area</span> -->
+                        <!-- </div> -->
+                    <!-- </div> -->
+                <!-- </div> -->
+
+                {% else %}
+                <div class="row">
+                    <div class="d-flex justify-content-center mt-2">
+                        <p>Upgrade your account to access Occupation level data</p>
+                        <input type="hidden" form="sub-form-create" name="ind_occ_switch_value_create" id="ind_occ_switch_value_create" value="industry" autocomplete="off">
+                    </div>
+                </div>
+                {% endif %}
+
+
+                <div class="modal-body" id="filter-container">
+                    <input class="form-control" placeholder="Name of Dataset" value="" type="text" name="name_create" id="name_create" form="sub-form-create" required autocomplete="off">
+                    <br>
+
+                    <div id="state-container-create" class="field-w">
+                        State Name : <select form="sub-form-create" name="state_create" id="selCreate1" onchange="changeStateFuncMSACreate(this.value)" required autocomplete="off">
+                            <option value="">Select State</option>
+                            {% for i,j in states.items %}
+                            <option value="{{i}}--==--{{j}}">{{j}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="area-container-create" class="field-w"></div>
+                    <div id="skills-container-create" onchange="graphDiscoCreate()" class="field-w"></div>
+                    <!-- <div id="occupation-container-create" onchange="graphDiscoOccCreate()" class="field-w"></div> -->
+
+                    <button type="button" class="btn btn-primary" onclick="thisfunc_create()">Save</button>
+
+                    <div class="row" id="graphDiscoToggleRowCreate" style="display: none;">
+                        <div class="d-flex justify-content-center">
+                            <input id="graphDiscoToggleCreate" type="checkbox" checked data-toggle="toggle-2-create" data-on="Hourly" data-off="Salary" style="border: 0.0625rem solid transparent;">
+                        </div>
+                    </div>
+
+
+                    <!-- <div class="row" id="graphDiscoToggleRow" style="display: none;">
+                        <div class="d-flex justify-content-center">
+                            <input id="graphDiscoToggle" type="checkbox" checked data-toggle="toggle" data-on="Hourly" data-off="Salary" style="border: 0.0625rem solid transparent;">
+                        </div>
+                    </div> -->
+
+
+                    <div id="graphDiscoHourlyCreate"></div>
+                    <div id="graphDiscoSalaryCreate" style="display: none;"></div>
+                </div>
+
+
+                <script>
+
+                    $('#selCreate1').selectize({
+                        sortField: 'text'
+                    });
+
+                    state_container_options_create = 'State Name : <select form="sub-form-create" name="stateCreate" id="selCreate1" onchange="changeStateFuncCreate(this.value)" required autocomplete="off"><option value="">Select State</option>{% for i,j in states.items %}<option value="{{i}}--==--{{j}}">{{j}}</option>{% endfor %}</select>';
+                    state_container_options_msa_create = 'State Name : <select form="sub-form-create" name="stateCreate" id="selCreate1" onchange="changeStateFuncMSACreate(this.value)" required autocomplete="off"><option value="">Select State</option>{% for i,j in states.items %}<option value="{{i}}--==--{{j}}">{{j}}</option>{% endfor %}</select>';
+
+                    dictaCreate = {};
+
+                    // function changeStateFuncCreate(a){
+                    //     if(a != ""){
+                    //         temp = a.split("--==--");
+                    //         // document.getElementById('industry-container-create').innerHTML = '';
+                    //         // document.getElementById('occupation-container-create').innerHTML = '';
+                    //         document.getElementById("area-container-create").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                    //         $.get("/get-areas-from-state/"+temp[0],function (data){
+                    //             htmlAddition = "Area Name : <select form='sub-form-create' name='areaCreate' id='selCreate2' onchange=changeSkillFuncCreate(this.value) required autocomplete='off'><option value=''>Select Area Name</option>";
+                    //             for (i=0 ; i<data.length ; i++){
+                    //                 if (document.getElementById('edit-hid').value == 'Y'){
+                    //                     if (data[i]['id'] == document.getElementById('area-id-create').value){
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                     else{
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                 }
+                    //                 else{
+                    //                     htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                 }
+                    //             }
+                    //             htmlAddition += "</select>"
+                    //             document.getElementById("area-container-create").innerHTML = htmlAddition;
+                    //             $('#selCreate2').selectize({
+                    //                 sortField: 'text'
+                    //             });
+                    //         });
+                    //     }
+                    // }
+
+                    function changeStateFuncMSACreate(a){
+                        if(a != ""){
+                            document.getElementById('skills-container-create').innerHTML = '';
+                            document.getElementById("area-container-create").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                            $.get("/get-msa-from-state/"+a.split("--==--")[0],function (data){
+                                htmlAddition = "Metro Area : <select form='sub-form-create' name='msaCreate' id='selCreate2' onchange=changeSkillFuncMSACreate(this.value) required autocomplete='off'><option value=''>Select Metro Area</option>";
+                                for (i=0 ; i<data.length ; i++){
+                                    if (document.getElementById('edit-hid-create').value == 'Y'){
+                                        if (data[i]['id'] == document.getElementById('area-id-create').value){
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                                        }
+                                        else{
+                                            htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                        }
+                                    }
+                                    else{
+                                        htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                                    }
+                                }
+                                htmlAddition += "</select>"
+                                document.getElementById("area-container-create").innerHTML = htmlAddition;
+                                $('#selCreate2').selectize({
+                                    sortField: 'text'
+                                });
+                            });
+                        }
+                    }
+                    // function changeSkillFuncCreate(a){
+                    //     if(a != ""){
+                    //         temp = a.split("--==--");
+                    //         // document.getElementById('occupation-container-create').innerHTML = '';
+                    //         // document.getElementById("skills-container-create").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                    //         $.get("/get-skills-from-county/"+temp[0],function (data){
+                    //             descArr = [];
+                    //             if (data.length == 0){
+                    //                 document.getElementById("skills-container-create").innerHTML = '';
+                    //                 window.alert("No skills found against the selected area.");
+                    //                 return;
+                    //             }
+
+
+                    //             // for (i=0 ; i<data.length ; i++) {
+                    //             //     console.log(data[i][0]);
+                    //             // }
+
+                            
+                    //             htmlAddition = "Skills : <select form='sub-form-create' name='skillCreate' id='selCreate3' required autocomplete='off' onchange='itemClassAdd()' style='max-width:100%;' multiple='multiple'><option value=''>Select Industry</option>";
+                    //             for (i=0 ; i<data.length ; i++){
+                    //                 temp = [];
+
+                    //                 // if (data[i]['cross_ref'] == 1) {
+                    //                 //     temp.push(true);
+                    //                 // } else {
+                    //                 //     temp.push(false);
+                    //                 // }
+
+                    //                 // if (data[i]['forecastable'] == 1) {
+                    //                 //     temp.push(true);
+                    //                 // } else {
+                    //                 //     temp.push(false);
+                    //                 // }
+                    //                 descArr.push(data[i][0]);
+                    //                 dicta[data[i][0]] = temp;
+
+                    //                 if (document.getElementById('edit-hid').value == 'Y'){
+                    //                     if (data[i]['id'] == document.getElementById('industry-id-create').value){
+                    //                         htmlAddition += "<option value='"+data[i][0]+"--==--"+data[i][0]+"' selected>" + data[i][0] + "</option>"
+                    //                     }
+                    //                     else{
+                    //                         htmlAddition += "<option value='"+data[i][0]+"--==--"+data[i][0]+"'>" + data[i][0] + "</option>"
+                    //                     }
+                    //                 }
+                    //                 else{
+                    //                     htmlAddition += "<option value='"+data[i][0]+"--==--"+data[i][0]+"'>" + data[i][0] + "</option>"
+                    //                 }
+                    //             }
+                    //             htmlAddition += "</select>";
+
+                    //             document.getElementById("skills-container-create").innerHTML = htmlAddition;
+                    //             $('#selCreate3').selectize({
+                    //                 sortField: 'text',
+                    //                 maxOptions: 20000
+                    //             });
+                    //             setTimeout(function (){
+                    //                 a = document.getElementsByClassName("selectize-dropdown-content")[2];
+                    //                 a.style = "width:100%;";
+                    //                 $("#selCreate3-selectized").click();
+                    //                 setTimeout(function (){
+                    //                     b = document.getElementsByClassName("option");
+                    //                     for (j = 0 ; j < b.length ; j++){
+                    //                         temp = b[j].getAttribute("data-value").split("--==--")[1];
+                    //                         temp2 = dicta[temp];
+                    //                         // if (null != temp2){
+                    //                         //     if (temp2[0]){
+                    //                         //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                    //                         //     }
+                    //                         //     if (temp2[1]){
+                    //                         //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                    //                         //     }
+                    //                         // }
+                    //                     }
+                    //                     $("#selCreate3-selectized").click();
+                    //                 },1);
+                    //             },1);
+                    //         });
+                    //     }
+                    // }
+                    function changeSkillFuncMSACreate(a){
+                        if(a != ""){
+                            temp = a.split("--==--");
+                            // document.getElementById('occupation-container-create').innerHTML = '';
+                            document.getElementById("skills-container-create").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                            $.get("/get-skills-from-msa/"+temp[0],function (data){
+                                // descArr = [];
+                                if (data.length == 0){
+                                    document.getElementById("skills-container-create").innerHTML = '';
+                                    window.alert("No skills found for the selected area.");
+                                    return;
+                                }
+
+                                skills = document.getElementById('skills-id-create').value;
+                                skills = skills.split(",");
+
+                                for (i=0 ; i<skills.length ; i++){
+                                    skills[i] = skills[i].trim();
+                                }
+
+                                // console.log("skills_html", skills);
+                            
+                                // htmlAddition = "Skills : <select form='sub-form-create' name='skillCreate' id='selCreate3' required autocomplete='off' onchange='itemClassAdd()' style='max-width:100%;' multiple='multiple'><option value=''>Select Skills</option>";
+                                htmlAddition = "Skills : <select form='sub-form-create' name='skillCreate' id='selCreate3' required autocomplete='off' style='max-width:100%;' multiple='multiple'><option value=''>Select Skills</option>";
+                                for (i=0 ; i<data.length ; i++){
+                                    // temp = [];
+
+                                    // if (data[i]['cross_ref'] == 1) {
+                                    //     temp.push(true);
+                                    // } else {
+                                    //     temp.push(false);
+                                    // }
+
+                                    // if (data[i]['forecastable'] == 1) {
+                                    //     temp.push(true);
+                                    // } else {
+                                    //     temp.push(false);
+                                    // }
+
+                                    // descArr.push(data[i][0]);
+                                    // dicta[data[i][0]] = temp;
+
+                                    if (document.getElementById('edit-hid-create').value == 'Y') {
+                                        console.log(data[i][0], skills, skills.includes(data[i][0]))
+                                        if (skills.includes(data[i][0])) {
+                                            htmlAddition += "<option value='"+data[i][0]+"' selected>" + data[i][0] + "</option>"
+                                        } else {
+                                            htmlAddition += "<option value='"+data[i][0]+"'>" + data[i][0] + "</option>"
+                                        }
+                                    } else {
+                                        htmlAddition += "<option value='"+data[i][0]+"'>" + data[i][0] + "</option>"
+                                    }
+                                }
+                                htmlAddition += "</select>";
+
+                                document.getElementById("skills-container-create").innerHTML = htmlAddition;
+                                $('#selCreate3').selectize({
+                                    sortField: 'text'
+                                    , maxOptions: 20000
+                                    // ,onChange: function(value) {
+                                    //        alert(value);
+                                    //   }
+                                });
+
+                                // setTimeout(function (){
+                                //     a = document.getElementsByClassName("selectize-dropdown-content")[2];
+                                //     a.style = "width:100%;";
+                                //     $("#selCreate3-selectized").click();
+                                //     setTimeout(function (){
+                                //         b = document.getElementsByClassName("option");
+                                //         for (j = 0 ; j < b.length ; j++){
+                                //             temp = b[j].getAttribute("data-value").split("--==--")[1];
+                                //             temp2 = dicta[temp];
+                                //             if (null != temp2){
+                                //                 if (temp2[0]){
+                                //                     b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                                //                 }
+                                //                 if (temp2[1]){
+                                //                     b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                                //                 }
+                                //             }
+                                //         }
+                                //         $("#selCreate3-selectized").click();
+                                //     },1);
+                                // },1);
+                            });
+                        }
+                    }
+
+                    // function changeOccupationFuncMSACreate(a){
+                    //     if(a != ""){
+                    //         temp = a.split("--==--");
+                    //         document.getElementById("occupation-container-create").innerHTML = '<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>';
+                    //         $.get("/get-occupations-from-msa/"+temp[2]+"/"+temp[0],function (data){
+                    //             descArr = [];
+                    //             if (data.length == 0){
+                    //                 document.getElementById("occupation-container-create").innerHTML = 'There is no occupation level data for the industry in this MSA';
+                    //                 // window.alert("No occupation found against the selected area.");
+                    //                 return;
+                    //             }
+                    //             htmlAddition = "Occupation Title (Optional): <select form='sub-form-create' name='occupationCreate' id='selCreate4' required autocomplete='off' style='max-width:100%;'><option value=''>Select Occupation</option>";
+
+
+                    //             for (i=0 ; i<data.length ; i++){
+                    //                 // temp = [];
+
+                    //                 // if (data[i]['cross_ref'] == 1) {
+                    //                 //     temp.push(true);
+                    //                 // } else {
+                    //                 //     temp.push(false);
+                    //                 // }
+
+                    //                 // if (data[i]['forecastable'] == 1) {
+                    //                 //     temp.push(true);
+                    //                 // } else {
+                    //                 //     temp.push(false);
+                    //                 // }
+
+                    //                 descArr.push(data[i]['name']);
+                    //                 dicta[data[i]['name']] = temp;
+
+                    //                 if (document.getElementById('edit-hid').value == 'Y'){
+                    //                     if (data[i]['id'] == document.getElementById('occupation-id-create').value){
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"' selected>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                     else{
+                    //                         htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                     }
+                    //                 }
+                    //                 else{
+                    //                     htmlAddition += "<option value='"+data[i]['id']+"--==--"+data[i]['name']+"'>" + data[i]['name'] + "</option>"
+                    //                 }
+                    //             }
+                    //             htmlAddition += "</select>";
+
+                    //             htmlAddition += '<button class="btn btn-primary col-3" type="button" onclick="removeOccCreate()">Clear Occupation</button>'
+
+                    //             document.getElementById("occupation-container-create").innerHTML = htmlAddition;
+
+                    //             $('#sel4').selectize({
+                    //                 sortField: 'text',
+                    //                 maxOptions: 20000
+                    //             });
+                    //             a = document.getElementsByClassName("selectize-dropdown-content")[3];
+
+                    //             //a.classList.add("fa");
+                    //             a.style = "width:100%;";
+                    //             //$("#sel3-selectized").click();
+                    //             setTimeout(function (){
+                    //                 b = document.getElementsByClassName("option");
+                    //                 for (j = 0 ; j < b.length ; j++){
+                    //                     temp = b[j].getAttribute("data-value").split("--==--")[1];
+                    //                     // temp2 = dicta[temp];
+                    //                     // if (null != temp2){
+                    //                     //     if (temp2[0]){
+                    //                     //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                    //                     //     }
+                    //                     //     if (temp2[1]){
+                    //                     //         b[j].innerHTML = b[j].innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                    //                     //     }
+                    //                     // }
+                    //                 }
+                    //                 $("#selCreate4-selectized").click();
+                    //             },1);
+                    //         });
+                    //     }
+                    // }
+
+                    function itemClassAdd(){
+                        b = document.getElementsByClassName("item")[2];
+                        temp = b.getAttribute("data-value").split("--==--")[1];
+                        temp2 = dicta[temp];
+                        if (null != temp2 && b.innerHTML.includes("fa-pull-right") == false){
+                            if (temp2[0]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf1b3;</span>"
+                            }
+                            if (temp2[1]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf201;</span>"
+                            }
+                            if (temp2[2]){
+                                b.innerHTML = b.innerHTML + "  <span class='fa fa-pull-right'>&#xf012;</span>"
+                            }
+                        }
+                    }
+
+                    function removeOcc() {
+                        document.getElementById("sel4").selectize.clear();
+                        // document.getElementById("selCreate4").selectize.clear();
+                        graphDisco();
+                    }
+
+                </script>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link text-gray ms-auto" id="prev_modal1" data-bs-dismiss="modal">Previous</button>
+                    <!-- <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal">Close</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <input type="hidden" id="area-id-create" value="">
+    <input type="hidden" id="industry-id-create" value="">
+    <input type="hidden" id="occupation-id-create" value="">
+    <input type="hidden" id="skills-id-create" value="">
+
+    <script>
+        function thisfunc_create(){
+            if (
+                document.getElementById('name_create').value != "" 
+                && document.getElementById('selCreate1').value != "" 
+                && document.getElementById('selCreate2').value != "" 
+                && document.getElementById('selCreate3').value != "") {
+                    document.getElementById('sub-form-create').submit();
+            }
+            else {
+                window.alert('Please complete your dataset');
+            }
+        }
+
+        function render_add_form_create(){
+            document.getElementById("name-create").value = "";
+            document.getElementById("sels-hid-create").value = "";
+            document.getElementById("edit-hid-create").value = "N";
+            // document.getElementById("county_msa_switch_value_create").value = "msa";
+            document.getElementById("state-container-create").innerHTML = state_container_options_create;
+            {% if subobj.active %}
+            document.getElementById("county_msa_switch_create").checked = false;
+            document.getElementById("state-container-create").innerHTML = state_container_options_msa_create;
+            {% endif %}
+            
+            $('#sel1').selectize({
+                sortField: 'text'
+            });
+            document.getElementById('area-id-create').value = "";
+            document.getElementById("area-container-create").innerHTML = '';
+            document.getElementById('skills-id-create').value = "";
+            document.getElementById("skills-container-create").innerHTML = '';
+            // document.getElementById("occupation-container-create").innerHTML = '';
+            document.getElementById("graphDiscoHourlyCreate").innerHTML = '';
+            document.getElementById("graphDiscoSalaryCreate").innerHTML = '';
+            // $("#modal-default2").modal("toggle");
+            $("#myModal1").modal("toggle");
+        }
+        
+        // function render_edit_form_create(a,b,c,d,e,f,g,h){
+        //     console.log(a,b,c,d,e,f,g,h);
+
+        //     // a = Dataset name
+        //     // b = dataset id
+        //     // c = MSA code
+        //     // d = industry id
+        //     // e = State name
+        //     // f = msa
+        //     // g = occupation id
+        //     // h = skills
+
+        //     document.getElementById("name_create").value = a;
+        //     document.getElementById("sels-hid-create").value = b;
+        //     document.getElementById("edit-hid-create").value = "Y";
+        //     // document.getElementById("county_msa_switch_value_create").value = f;
+        //     f = 'msa'
+        //     if (f == "msa"){
+        //         // document.getElementById("county_msa_switch_create").checked = true;
+        //         document.getElementById("state-container-create").innerHTML = state_container_options_msa_create;
+        //     }
+        //     else{
+        //         document.getElementById("state-container-create").innerHTML = state_container_options_create;
+        //     }
+        //     // $('#sel1').selectize({
+        //     //     sortField: 'text'
+        //     // });
+        //     var options = document.getElementsByTagName("option");
+        //     // console.log(options.innerText)
+        //     for (i=0 ; i < options.length ; i++){
+        //         if (options[i].innerText == e) {
+        //             // console.log(options[i]);
+        //             options[i].setAttribute("selected","selected");
+        //             temp = options[i].getAttribute("value");
+        //             console.log(temp);
+        //             console.log(c);
+        //             break;
+        //         }
+        //     }
+        //     $('#selCreate1').selectize({
+        //         sortField: 'text'
+        //     });
+        //     document.getElementById('area-id-create').value = c;
+        //     // document.getElementById('industry-id-create').value = d;
+        //     // document.getElementById('occupation-id-create').value = g;
+        //     document.getElementById('skills-id-create').value = h;
+
+        //     // if (f == "msa"){
+        //     //     if (g != "") {
+        //     //         changeStateFuncMSACreate(temp);
+        //     //         changeIndustryFuncMSACreate(c+"--==--"+"abc");
+        //     //         changeOccupationFuncMSACreate(d+"--==--"+"abc"+"--==--"+c);
+        //     //         // itemClassAdd();
+        //     //     } else {
+        //     //         changeStateFuncMSACreate(temp);
+        //     //         changeIndustryFuncMSACreate(c+"--==--"+"abc");
+        //     //         // itemClassAdd();
+        //     //     }
+        //     // } else{
+        //     //     changeStateFuncCreate(temp);
+        //     //     changeIndustryFuncCreate(c+"--==--"+"abc");
+        //     //     // itemClassAdd();
+        //     // }
+
+
+        //     if (h != "") {
+        //         changeStateFuncMSACreate(temp);
+        //         changeSkillFuncMSACreate(c);
+        //         graphDiscoCreate(edit=true);
+        //     }
+
+
+        //     // if (h != "") {
+        //     //     graphDiscoOcc(edit=true);
+        //     // } else {
+        //     //     graphDisco(edit=true);
+        //     // }
+
+        //     $("#modal-default3").modal("toggle");
+        // }
+    </script>
+
+
+
+
+    {% if datasets_view_hourly is not null %}
+    <!-- CARDS HOURLY -->
+    <div id="summary_cards_hourly" class="row justify-content-md-center">
+        {% for i,j,k,l,m,n,o,p,q,r,s,t,u in datasets_view_hourly %}
+        <div class="col-12 col-sm-6 col-xl-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body card-click rounded h-100" onclick="$('#modal-summary-hourly{{i.id}}').modal('toggle');" style="position: relative;">
+
+                    {% if m > 0 %} <i class="fa fa-line-chart fa-lg" data-toggle="tooltip" title="Forecastable" style="padding-right:3%;"></i> {% endif %}
+                    {% if n > 0 %} <i class="fa fa-cubes fa-lg" data-toggle="tooltip" title="Cross Reference Available"></i> {% endif %}
+                    {% if q > 0 %} <i class="fa fa-signal fa-lg" data-toggle="tooltip" title="Wage Bands"></i> {% endif %}
+                    {% if n <= 0 and m <= 0 %} <i class="fa fa-fw fa-lg"></i> {% endif %}
+
+
+                    {% if u != 1 %}
+                    <i class="fa fa-edit fa-lg" data-toggle="tooltip" title="Edit Dataset" style="float:right;padding: 2px;" onclick="render_edit_form('{{i.name}}','{{i.id}}','{{o}}','{{p}}','{{i.state_title}}','{{i.settype}}','{{s}}'); event.stopPropagation();" ></i>
+                    {% else %}
+                    <i class="fa fa-edit fa-lg" data-toggle="tooltip" title="Edit Dataset" style="float:right;padding: 2px;" onclick="render_edit_form_create('{{i.name}}','{{i.id}}','{{o}}','{{p}}','{{i.state_title}}','{{i.settype}}','{{s}}', '{{t}}', '{{u}}'); event.stopPropagation();" ></i>
+                    {% endif %}
+
+                    <span></span>
+
+                    <i class="fa fa-trash fa-lg fa-danger" data-toggle="tooltip" title="Delete Dataset" style="float:right; color:red;" onclick="$('#modal-delete-hourly{{i.id}}').modal('toggle'); event.stopPropagation();" ></i>&ensp;
+
+                    <div class="row d-block d-xl-flex align-items-center">
+                        <div class="col-12 col-xl-12 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+                            <div class="d-sm-none">
+                                <h2 class="h5">{{i.name}}</h2>
+                                <h3 class="mb-1">${{j}}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-12 px-xl-0">
+                            <div class="d-none d-sm-block">
+                                <h2 class="d-flex justify-content-center h4">{{i.name}}</h2>
+                                <div class="d-flex justify-content-center mb-3 text-primary">
+                                    <span class="h5 mb-0">$</span>
+                                    <span class="price display-3 text-primary mb-0" id="priceStandard1">{{j}}</span>
+                                    <span class="h6 fw-normal align-self-end">/hour</span>
+                                </div>
+                            </div>
+                            <div class="small mt-2">
+                                <b>Area:</b> {{i.area_title}}, {{i.state_title}} 
+                                {% if u == 1 %}
+                                <br><b>Skills:</b> {{t}}
+                                {% else %}
+                                <br><b>Industry:</b> {{i.industry_title}} 
+                                {% if q == 1 and u == 0 %}
+                                <br><b>Occupation:</b> {{r}}
+                                {% elif u == 1 and q ==  1 %}
+                                <br><b>Skills:</b> {{t}}
+                                {% endif %}
+                                {% endif %} 
+                                {% if debug %}
+                                    <br><b style="color:red">DEV Area ID: {{o}}</b>
+                                    <br><b style="color:red">DEV Industry ID: {{p}}</b>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-delete-hourly{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="modal-delete-hourly{{i.id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this dataset?</p>                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/delete-dataset/{{i.id}}'">Yes</button>
+                        <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-summary-hourly{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="modal-summary-hourly{{i.id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <h1>{{i.name}}</h1>
+                        <div class="small mt-2">
+                            <b>Area:</b> {{i.area_title}}, {{i.state_title}} 
+                            {% if u == 1 %}
+                            <br><b>Skills:</b> {{t}}
+                            {% else %}
+                            <br><b>Industry:</b> {{i.industry_title}} 
+                            {% if q == 1 and u == 0 %}
+                            <br><b>Occupation:</b> {{r}}
+                            {% elif u == 1 and q ==  1 %}
+                            <br><b>Skills:</b> {{t}}
+                            {% endif %}
+                            {% endif %} 
+                            <br><b>Updated: </b>Q{{k}}-<b></b>{{l}}   
+                        </div>
+
+                        <br>
+
+                        <h1>Area Wage and Employment Summary</h1>
+                        <p>High-level employment statistics for the area</p>
+                        {% if unemp == True %}
+                        <p style="margin-bottom:0;">Please note the following employment level data is at the area level, <u>not</u> at an industry level</p>
+                        <div id="unemployment_hourly_cards_{{i.id}}" style="padding:1%;"></div>
+                        {% else %}
+                        <p>Please upgrade your account to access employment level information</p>
+                        {% endif%}
+
+                        {% if n > 0 %}
+                        <br>
+                        <h1>Industry Cross-Reference Comparison</h1>
+                        <p>Compare wages in similar industries</p>
+                        <div class="chart_cards" id="chart_hourly_cards_{{i.id}}"></div>
+                        {% endif %}
+
+                        {% if q == 1 %}
+                        <br>
+                        <h1>Occupation Wage Bands</h1>
+                        <p>Wages broken down into groups from lowest to highest</p>
+                        <div class="chart_cards" id="chart_hourly_bands_{{i.id}}"></div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer" style="border-top:None">
+                        <button type="button" class="btn btn-link align-items-center text-gray" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <!-- END CARDS HOURLY-->
+
+    <!-- CARDS SALARY -->
+    <div id="summary_cards_salary" class="row justify-content-md-center" style="display: none;">
+        {% for i,j,k,l,m,n,o,p,q,r,s,t,u in datasets_view_salary %}
+        <div class="col-12 col-sm-6 col-xl-4 mb-4">
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body card-click rounded" onclick="$('#modal-summary-salary{{i.id}}').modal('toggle');" style="position: relative;">
+
+                    {% if m > 0 %} <i class="fa fa-line-chart fa-lg" data-toggle="tooltip" title="Forecastable" style="padding-right:3%;"></i> {% endif %}
+                    {% if n > 0 %} <i class="fa fa-cubes fa-lg" data-toggle="tooltip" title="Cross Reference Available"></i> {% endif %}
+                    {% if q > 0 %} <i class="fa fa-signal fa-lg" data-toggle="tooltip" title="Wage Bands"></i> {% endif %}
+                    {% if n <= 0 and m <= 0 %} <i class="fa fa-fw fa-lg"></i> {% endif %}
+
+
+
+                    {% if u != 1 %}
+                    <i class="fa fa-edit fa-lg" data-toggle="tooltip" title="Edit Dataset" style="float:right;padding: 2px;" onclick="render_edit_form('{{i.name}}','{{i.id}}','{{o}}','{{p}}','{{i.state_title}}','{{i.settype}}','{{s}}'); event.stopPropagation();" ></i>
+                    {% else %}
+                    <a><i class="fa fa-edit fa-lg" data-toggle="tooltip" title="Edit Dataset" style="float:right;padding: 2px;" onclick="render_edit_form_create('{{i.name}}','{{i.id}}','{{o}}','{{p}}','{{i.state_title}}','{{i.settype}}','{{s}}', '{{t}}', '{{u}}'); event.stopPropagation();" ></i></a>
+                    {% endif %}
+
+                    <a><i class="fa fa-trash fa-lg fa-danger" data-toggle="tooltip" title="Delete Dataset" style="float:right; color: red;" onclick="$('#modal-delete-salary{{i.id}}').modal('toggle'); event.stopPropagation();"></i></a>&ensp;
+
+                    <div class="row d-block d-xl-flex align-items-center">
+                        <div class="col-12 col-xl-12 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+                            <div class="d-sm-none">
+                                <h2 class="h5">{{i.name}}</h2>
+                                <h3 class="mb-1">${{j}}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-12 px-xl-0">
+                            <div class="d-none d-sm-block">
+                                <h2 class="d-flex justify-content-center h4">{{i.name}}</h2>
+                                <div class="d-flex justify-content-center mb-3 text-primary">
+                                    <span class="h5 mb-0">$</span>
+                                    <span class="price display-3 text-primary mb-0" id="priceStandard1">{{j}}</span>
+                                    <span class="h6 fw-normal align-self-end">/year</span>
+                                </div>
+                            </div>
+                            <div class="small mt-2"> 
+                                <b>Area:</b> {{i.area_title}}, {{i.state_title}} 
+                                {% if u == 1 %}
+                                <br><b>Skills:</b> {{t}}
+                                {% else %}
+                                <br><b>Industry:</b> {{i.industry_title}} 
+                                {% if q == 1 and u == 0 %}
+                                <br><b>Occupation:</b> {{r}}
+                                {% elif u == 1 and q ==  1 %}
+                                <br><b>Skills:</b> {{t}}
+                                {% endif %}
+                                {% endif %} 
+                                {% if debug %}
+                                    <br><b style="color:red">DEV Area ID: {{o}}</b>
+                                    <br><b style="color:red">DEV Industry ID: {{p}}</b>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-delete-salary{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="modal-delete-salary{{i.id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this dataset?</p>                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/delete-dataset/{{i.id}}'">Yes</button>
+                        <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-summary-salary{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="modal-summary-salary{{i.id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:75%;">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <h1>{{i.name}}</h1>
+                        <div class="small mt-2">
+                            <b>Area:</b> {{i.area_title}}, {{i.state_title}} 
+                            {% if u == 1 %}
+                            <br><b>Skills:</b> {{t}}
+                            {% else %}
+                            <br><b>Industry:</b> {{i.industry_title}} 
+                            {% if q == 1 and u == 0 %}
+                            <br><b>Occupation:</b> {{r}}
+                            {% elif u == 1 and q ==  1 %}
+                            <br><b>Skills:</b> {{t}}
+                            {% endif %}
+                            {% endif %} 
+                            <br><b>Updated: </b>Q{{k}}-<b></b>{{l}}   
+                        </div>
+
+                        <br>
+
+                        <h1>Area Wage and Employment Summary</h1>
+                        <p>High-level employment statistics for the area</p>
+                        {% if unemp == True %}
+                        <p>Please not the following employment level data is <u>not</u> at an industry level</p>
+                        <div id="unemployment_salary_cards_{{i.id}}" style="padding:1%;"></div>
+
+                        <br>
+                        {% else %}
+                        <p>Please upgrade your account to access employment level information</p>
+                        <br>
+                        {% endif%}
+
+                        {% if n > 0 %}
+                        <h1>Industry Cross-Reference Comparison</h1>
+                        <p>Compare wages in similar industries</p>
+                        <div class="chart_cards" id="chart_salary_cards_{{i.id}}"></div>
+                        {% endif %}
+
+                        {% if q == 1 %}
+                        <h1>Occupation Wage Bands</h1>
+                        <p>Wages broken down into groups from lowest to highest</p>
+                        <div class="chart_cards" id="chart_salary_bands_{{i.id}}"></div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer" style="border-top:None">
+                        <button type="button" class="btn btn-link align-items-center text-gray" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <!-- END CARDS SALARY-->
+
+    <!-- GRAPH -->
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body d-flex flex-row align-items-center flex-0" style="padding:0rem 0rem">
+                <div class="w-100 d-flex justify-content-between align-items-start">
+                    <select hidden class="form-select" style="width: 250px;" id="area-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in areas.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select>
+                    <select hidden class="form-select" style="width: 250px;" id="industry-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in industries.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                    <select hidden class="form-select" style="width: 250px;" id="occupation-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in occupation.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                    <select hidden class="form-select" style="width: 250px;" id="skills-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in occupation.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                </div>
+            </div>
+            <div class="card-body pt-2 pb-2" id="hourly">
+                <div id="chart13"></div>
+            </div>
+
+
+            <div class="card-body d-flex flex-row align-items-center flex-0" style="padding:0rem 0rem">
+                <div class="w-100 d-flex justify-content-between align-items-start">
+                    <select hidden class="form-select" style="width: 250px;" id="area-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in areas.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select>
+                    <select hidden class="form-select" style="width: 250px;" id="industry-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in industries.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                    <select hidden class="form-select" style="width: 250px;" id="occupation-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in occupation.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                    <select hidden class="form-select" style="width: 250px;" id="skills-filter" onchange="gengraphApex(true)">
+                        <option value="none">== Default ==</option>
+                        {% for i,j in occupation.items %}
+                        <option>{{j}}</option>
+                        {% endfor %}
+                    </select> 
+                </div>
+            </div>
+            <div class="card-body pt-2 pb-2" id="salary" style="display: none;">
+                <div id="chart14"></div>
+            </div>
+        </div>
+    </div>
+    <!-- END GRAPH -->
+
+    <!-- DATA TABLE -->
+    <div class="row" id="data-table-hourly">
+        <div class="col-12 mb-4">
+            <div class="card card-body shadow-sm table-wrapper table-responsive"  style="margin-bottom:20px">
+                <div>
+                    <i class="fa fa-clipboard fa-lg" id="copyTableHourly" data-toggle="tooltip" title="Click to copy" onclick="selectElementContents(document.getElementById('table-hourly'));" style="padding-bottom:1%; flex: 1 1 0;"></i>
+                </div>
+                <table class="table user-table table-hover align-items-center" id="table-hourly">         
+
+                    <thead class="thead-light">
+                        <tr>
+                            {% for i in table_data %}
+                            <th class="border-0"
+                            {% if forloop.counter > 3 and forloop.counter < 13 and subtype == 'Data+Predictions' %}
+                            style="color:red"
+                            {% endif %}>{{i}}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Item -->
+                        {% for i in table_data_rows_hourly %}
+                        <tr>
+                            {% for j in i %}
+                            <td class="border-0" {% if forloop.counter > 3 and forloop.counter < 13 and subtype == 'Data+Predictions' %}
+                                style="color:red"
+                                {% endif %}>         
+                                {% if j > 0 or j is None %}{{j|floatformat:2}}{% else %}{{j}}{% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <!-- End of Item -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="data-table-salary" style="display: none;">
+        <div class="col-12 mb-4">
+            <div class="card card-body shadow-sm table-wrapper table-responsive">
+                <div>
+                    <i class="fa fa-clipboard fa-lg" id="copyTableSalary" data-toggle="tooltip" title="Click to copy" onclick="selectElementContents(document.getElementById('table-salary'));" style="padding-bottom:1%; flex: 1 1 0;"></i>
+                </div>
+                <table class="table user-table table-hover align-items-center" id="table-salary">         
+                    <thead class="thead-light">
+                        <tr>
+                            {% for i in table_data %}
+                            <th class="border-0"
+                            {% if forloop.counter > 3 and forloop.counter < 13 and subtype == 'Data+Predictions' %}
+                            style="color:red"
+                            {% endif %}>{{i}}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Item -->
+                        {% for i in table_data_rows_annually %}
+                        <tr>
+                            {% for j in i %}
+                            <td class="border-0"{% if forloop.counter > 3 and forloop.counter < 13 and subtype == 'Data+Predictions' %}
+                                style="color:red"
+                                {% endif %}>   
+                                {% if j is None %}{% else %}{{j}}{% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        <!-- End of Item -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- END DATA TABLE -->
+    {% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<script>
+function selectElementContents(el) {
+    var body = document.body, range, sel;
+    if (document.createRange && window.getSelection) {
+        range = document.createRange();
+        sel = window.getSelection();
+        sel.removeAllRanges();
+        try {
+            range.selectNodeContents(el);
+            sel.addRange(range);
+        } catch (e) {
+            range.selectNode(el);
+            sel.addRange(range);
+        }
+        document.execCommand("copy");
+        sel.removeAllRanges();
+
+    } else if (body.createTextRange) {
+        range = body.createTextRange();
+        range.moveToElementText(el);
+        range.select();
+        range.execCommand("Copy");
+        range.removeAllRanges();
+    }
+}
+
+$(function() {
+
+    function Toast(type, css, msg) {
+        this.type = type;
+        this.css = css;
+        this.msg = 'Table copied successfully!';
+    }
+
+    var toasts = [
+        new Toast('success', 'toast-bottom-right', 'bottom right')
+    ];
+
+    toastr.options.positionClass = 'toast-top-full-width';
+    toastr.options.extendedTimeOut = 0; //1000;
+    toastr.options.timeOut = 1000;
+    toastr.options.fadeOut = 250;
+    toastr.options.fadeIn = 250;
+
+    var i = 0;
+
+    $('#copyTableHourly').click(function () {
+        $('#copyTableHourly').prop('disabled', true);
+        delayToasts();
+    });
+    $('#copyTableSalary').click(function () {
+        $('#copyTableSalary').prop('disabled', true);
+        delayToasts();
+    });
+
+    function delayToasts() {
+        if (i === toasts.length) { return; }
+        var delay = i === 0 ? 0 : 2100;
+        window.setTimeout(function () { showToast(); }, delay);
+
+        // re-enable the button        
+        if (i === toasts.length-1) {
+            window.setTimeout(function () {
+                $('#copyTableHourly').prop('disabled', false);
+                i = 0;
+            }, delay + 2101);
+            window.setTimeout(function () {
+                $('#copyTableSalary').prop('disabled', false);
+                i = 0;
+            }, delay + 2101);
+        }
+    }
+
+    function showToast() {
+        var t = toasts[i];
+        toastr.options.positionClass = t.css;
+        toastr[t.type](t.msg);
+        i++;
+        delayToasts();
+    }
+})
+</script>
+<script>    
+    // checkbox = document.getElementById('county_msa_switch')
+    // checkbox.addEventListener('change', function(event) {
+    //     if(event.currentTarget.checked) {
+    //             document.getElementById("county_msa_switch_value").setAttribute("value","msa");
+    //             document.getElementById("sel1").setAttribute("onchange","changeStateFuncMSA(this.value)");
+
+    //             document.getElementById("area-container").innerHTML = "";
+    //             document.getElementById("industry-container").innerHTML = "";
+    //             document.getElementById("occupation-container").innerHTML = "";
+
+    //             document.getElementById("graphDiscoHourly").innerHTML = "";
+    //             document.getElementById("graphDiscoSalary").innerHTML = "";
+    //         } else {
+    //             document.getElementById("county_msa_switch_value").setAttribute("value","county");
+    //             document.getElementById("sel1").setAttribute("onchange","changeStateFunc(this.value)");
+
+    //             document.getElementById("area-container").innerHTML = "";
+    //             document.getElementById("industry-container").innerHTML = "";
+    //             document.getElementById("occupation-container").innerHTML = "";
+
+    //             document.getElementById("graphDiscoHourly").innerHTML = "";
+    //             document.getElementById("graphDiscoSalary").innerHTML = "";
+    //         }
+    // })
+
+    function clearOccState(){
+        document.getElementById("state-container").addEventListener('change', function(event){
+            document.getElementById("occupation-container").innerHTML = "";
+        })
+    }
+
+    function clearOccArea(){
+        document.getElementById("area-container").addEventListener('change', function(event){
+            document.getElementById("occupation-container").innerHTML = "";
+        })
+    }
+</script>
+<script>
+    // checkbox = document.getElementById('county_msa_switch_create')
+    // checkbox.addEventListener('change', function(event) {
+    //     if(event.currentTarget.checked) {
+    //             document.getElementById("county_msa_switch_value_create").setAttribute("value","msa");
+    //             document.getElementById("selCreate1").setAttribute("onchange","changeStateFuncMSACreate(this.value)");
+
+    //             document.getElementById("area-container-create").innerHTML = "";
+    //             document.getElementById("industry-container-create").innerHTML = "";
+    //             document.getElementById("occupation-container-create").innerHTML = "";
+
+    //             document.getElementById("graphDiscoHourlyCreate").innerHTML = "";
+    //             document.getElementById("graphDiscoSalaryCreate").innerHTML = "";
+    //         } else {
+    //             document.getElementById("county_msa_switch_value_create").setAttribute("value","county");
+    //             document.getElementById("selCreate1").setAttribute("onchange","changeStateFuncCreate(this.value)");
+
+    //             document.getElementById("area-container-create").innerHTML = "";
+    //             document.getElementById("industry-container-create").innerHTML = "";
+    //             document.getElementById("occupation-container-create").innerHTML = "";
+
+    //             document.getElementById("graphDiscoHourlyCreate").innerHTML = "";
+    //             document.getElementById("graphDiscoSalaryCreate").innerHTML = "";
+    //         }
+    // })
+
+    function clearOccStateCreate(){
+        document.getElementById("state-container-create").addEventListener('change', function(event){
+            document.getElementById("occupation-container-create").innerHTML = "";
+        })
+    }
+
+    function clearOccAreaCreate(){
+        document.getElementById("area-container-create").addEventListener('change', function(event){
+            document.getElementById("occupation-container-create").innerHTML = "";
+        })
+    }
+</script>
+
+
+<script>
+    // $("div[id^='myModal']").each(function(){
+  
+    var currentModal = $('#myModal1');
+
+  
+    //click next
+    $('#pre_defined').click(function(){
+        // alert('I was clicked on!');
+        currentModal.modal('hide');
+        $("#modal-default2").modal('show');
+    });
+
+    //click prev
+    $('#create_new').click(function(){
+        // alert('I was clicked on!');
+        currentModal.modal('hide');
+        $("#modal-default3").modal('show');
+    });
+
+    //click prev
+    $('#prev_modal1').click(function(){
+        // alert('I was clicked on!');
+        $("#modal-default3").modal('hide');
+        $("#myModal1").modal('show');
+    });
+
+    //click prev
+    $('#prev_modal2').click(function(){
+        // alert('I was clicked on!');
+        $("#modal-default2").modal('hide');
+        $("#myModal1").modal('show');
+    });
+
+    $('.modal').css('overflow-y', 'auto');
+    // });
+</script>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+

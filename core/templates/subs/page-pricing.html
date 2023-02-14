@@ -1,0 +1,371 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Pricing {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+{% load static %}
+<script src="{% static 'assets/js/pricingPage.js' %}"></script>
+
+<div class="card border-light shadow-sm mb-5">
+    <div class="card-body">
+        <div class="row text-gray">
+            <div class="row justify-content-center">
+                <input type="hidden" id="subtype" value="{{subobj.subtype}}">
+                <input type="hidden" id="pertype" value="{{subobj.periodtype}}">
+                <input type="hidden" id="cancel_at" value="{{subobj.cancel_at}}">
+                <input type="hidden" id="profile_id" value="{{obj.id}}">
+                <input type="hidden" id="env" value="{{environment}}">
+                <input type="hidden" id="is_admin" value="{{obj.is_admin}}">
+                <div class="col-12 col-sm-7 col-lg-5 col-xl-5">
+                    <div class="card-header text-center d-grid pb-4" style="border:none">
+                        <div class="row mb-4">
+                            <div class="col-12 col-sm-12 col-lg-12 col-xl-12 text-primary">
+                                <span class="h4 mb-0">$</span>
+                                {% if environment == 'dev' %}
+                                <span class="price display-1 text-secondary mb-0" id="pricePremium1">1</span>
+                                {% else %}
+                                <span class="price display-1 text-secondary mb-0" id="pricePremium1">1,500</span>
+                                {% endif %}
+                                <span class="h6 fw-normal align-self-end">/user</span>
+                            </div>
+                            <div class="col-5 col-lg-5 col-xl-5 d-flex align-items-center text-primary">
+                                <span class="h5 fw-normal me-3 mt-2">Monthly</span>  
+                                <div class="form-check form-switch">
+                                    <input type="hidden" id="switchvalue" value="m" autocomplete="off">
+                                    <input class="form-check-input" type="checkbox" id="billingSwitch" autocomplete="off">
+                                    <label class="form-check-label" for="billingSwitch"></label>
+                                </div> 
+                                <span class="h5 fw-normal ms-1 mt-2">Annually</span>
+                            </div>
+                            <div class="col-12 col-lg-12 col-xl-12 align-items-center text-center" id="savings-div">
+                                <span class="h6" style="position:relative;align-self: center;">Annual plan saves $<span>3000/user/year compared to the monthly plan</span></span>
+                            </div>
+                        </div>
+
+                        <a href="#" class="btn btn-secondary text-dark" onclick="redirectionfunc(3,document.getElementById('switchvalue').value)" id="dp-sub-btn">
+                            {% if   subobj.periodtype != 'Annually' and subobj.cancel_at == None and subobj.subtype == 'Data+Predictions' %}
+                                Switch to annual billing
+
+                            {% elif subobj.periodtype != 'Annually' and subobj.cancel_at != None and subobj.subtype == 'Data+Predictions' %}
+                                Reinstate subscription with annual billing (Current annual plan cancels on {{subobj.cancel_at}})
+
+                            {% elif subobj.periodtype == 'Annually' and subobj.cancel_at != None and subobj.subtype == 'Data+Predictions' %}
+                                Reinstate subscription (Cancels on {{subobj.cancel_at}})
+
+                            {% elif subobj.periodtype == 'Annually' and subobj.cancel_at == None and subobj.subtype == 'Data+Predictions' %}
+                                Cancel annual subscription
+                            
+                            {% elif subobj.periodtype != 'Monthly' and subobj.cancel_at == None and subobj.subtype == 'Data+Predictions' %}
+                                Switch to monthly billing
+
+                            {% elif subobj.periodtype != 'Monthly' and subobj.cancel_at != None and subobj.subtype == 'Data+Predictions' %}
+                                Reinstate subscription with monthly billing (Current monthly plan cancels on {{subobj.cancel_at}})
+
+                            {% elif subobj.periodtype == 'Monthly' and subobj.cancel_at != None and subobj.subtype == 'Data+Predictions' %}
+                                Reinstate subscription (Cancels on {{subobj.cancel_at}})
+
+                            {% elif subobj.periodtype == 'Monthly' and subobj.cancel_at == None and subobj.subtype == 'Data+Predictions' %}
+                                Cancel monthly subscription
+                            
+                            {% else %}
+                                Subscribe
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Cancelation -->
+<div class="modal fade" id="modal-notification-cancel" tabindex="-1" role="dialog" aria-labelledby="modal-notification-cancel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="py-3 text-center">
+                    <p>Are you sure you want to cancel the subscription for you and your complete userpool?</p>
+                    <p class="text-info">This action will end your current subscription on the last day of your billing cycle and will <b>NOT</b> be renewed. You will have access to your subscribed suite of features until the end of your billing cycle.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" id="yes-button-cancel" href="#">Yes</a>
+                <button type="button" class="btn text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-notification-cancel').toggle('modal');">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model switch billing period -->
+<div class="modal fade" id="modal-notification-switch" tabindex="-1" role="dialog" aria-labelledby="modal-notification-switch" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="py-3 text-center">
+                    <p>Are you sure you want to change the billing periods of your subscription?</p>
+                    <p class="text-danger">You will be billed immediately for the new period with at prorated rate based on your current subscription, the number of users in your account (including yourself), and the credit total you might have. For example, if you're switching to an annual plan immediately upon signing up for a monthly one (no time-based proration) with 5 users and have a $1,000 credit, you will be charged ~$14,000 <br>($1,5000/user * 5 users - $1,000 credit = $14,000)</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" id="yes-button-switch" href="#">Yes</a>
+                <button type="button" class="btn text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-notification-switch').toggle('modal');">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model reinstate with new billing cycle -->
+<div class="modal fade" id="modal-notification-reinstate-new-billing" tabindex="-1" role="dialog" aria-labelledby="modal-notification-reinstate-new-billing" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="py-3 text-center">
+                    <p>Are you sure you want to reinstate your subscription under a new billing period cycle?</p>
+                    <p class="text-info">You will not be billed immediately. Your first invoice will be when your canceled subscription period ends and will be for the amoung of the new billing period.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" id="yes-button-reinstate-new-billing" href="#">Yes</a>
+                <button type="button" class="btn text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-notification-reinstate-new-billing').toggle('modal');">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model reinstate subscription -->
+<div class="modal fade" id="modal-notification-reinstate" tabindex="-1" role="dialog" aria-labelledby="modal-notification-reinstate" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="py-3 text-center">
+                    <p>Are you sure you want to reinstate your subscription?</p>
+                    <p class="text-info">You will not be billed immediately. Your first invoice will be when your canceled subscription period ends.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" id="yes-button-reinstate" href="#">Yes</a>
+                <button type="button" class="btn text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-notification-reinstate').toggle('modal');">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model upgrade -->
+<div class="modal fade" id="modal-notification-upgrade" tabindex="-1" role="dialog" aria-labelledby="modal-notification-upgrade" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="py-3 text-center">
+                    <p>Let's get you subscribed! We're going to redirect you to a secure checkout page.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-primary" id="yes-button-upgrade" href="#">Let's go</a>
+                <button type="button" class="btn text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-notification-upgrade').toggle('modal');">Oops, never mind</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function redirectionfunc(a,b) {
+        cancel_at = document.getElementById('cancel_at').value;
+        subtype = document.getElementById('subtype').value;
+        pertype = document.getElementById('pertype').value;
+        profile_id = document.getElementById('profile_id').value;
+        is_admin = document.getElementById('is_admin').value;
+
+        billingSwitchBool = document.getElementById('billingSwitch').checked;
+        if (billingSwitchBool == true) {
+          periodchoice = 'Annually'
+        } else {
+          periodchoice = 'Monthly'
+        }
+
+        // Switch Billing Period
+        if (billingSwitchBool == true && pertype != 'Annually' && cancel_at == 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Switch to annual billing';
+            preparedLink = "/switch-billing-period?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-switch").modal("toggle");
+            document.getElementById("yes-button-switch").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+        } else if (billingSwitchBool == false && pertype != 'Monthly' && cancel_at == 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Switch to monthly billing';
+            preparedLink = "/switch-billing-period?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-switch").modal("toggle");
+            document.getElementById("yes-button-switch").setAttribute("href",preparedLink);
+            // alert(preparedLink); 
+
+
+        // Cancel Subscription
+        } else if (billingSwitchBool == false && pertype == 'Monthly' && cancel_at == 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Cancel monthly subscription';
+            preparedLink = "/cancel-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-cancel").modal("toggle");
+            document.getElementById("yes-button-cancel").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+        } else if (billingSwitchBool == true && pertype == 'Annually' && cancel_at == 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Cancel annual subscription';
+            preparedLink = "/cancel-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-cancel").modal("toggle");
+            document.getElementById("yes-button-cancel").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+
+
+        // Reinstate with new billing cycle
+        } else if (billingSwitchBool == false && pertype != 'Monthly' && cancel_at != 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Reinstate subscription with monthly billing (Current monthly plan cancels on ' + cancel_at.toString() + ')';
+            preparedLink = "/reinstate-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-reinstate-new-billing").modal("toggle");
+            document.getElementById("yes-button-reinstate-new-billing").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+        } else if (billingSwitchBool == true && pertype != 'Annually' && cancel_at != 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Reinstate subscription with annual billing (Current annual plan cancels on ' + cancel_at.toString() + ')';
+            preparedLink = "/reinstate-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-reinstate-new-billing").modal("toggle");
+            document.getElementById("yes-button-reinstate-new-billing").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+
+
+        // Reinstate subscription
+        } else if (billingSwitchBool == false && pertype == 'Monthly' && cancel_at != 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Reinstate subscription (Cancels on ' + cancel_at.toString() + ')';
+            preparedLink = "/reinstate-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-reinstate").modal("toggle");
+            document.getElementById("yes-button-reinstate").setAttribute("href",preparedLink);
+            // alert(preparedLink);
+        } else if (billingSwitchBool == true && pertype == 'Annually' && cancel_at != 'None' && subtype == 'Data+Predictions') {
+            document.getElementById('dp-sub-btn').innerText = 'Reinstate subscription (Cancels on ' + cancel_at.toString() + ')';
+            preparedLink = "/reinstate-subscription?profile-id=" + profile_id.toString() + "&subtype=" + subtype + "&pertype=" + pertype + "&periodchoice=" + periodchoice + "&isadmin=" + is_admin
+            $("#modal-notification-reinstate").modal("toggle");
+            document.getElementById("yes-button-reinstate").setAttribute("href",preparedLink);
+            // alert(preparedLink); 
+
+
+        // Upgrade
+        } else {
+            document.getElementById('dp-sub-btn').innerText = 'Subscribe';
+            preparedLink = "/create-checkout-subscription-session/"+a+"/"+b+"?profile-id={{obj.id}}";
+            document.getElementById("yes-button-upgrade").setAttribute("href",preparedLink);
+            $("#modal-notification-upgrade").modal("toggle");
+            // alert(preparedLink); 
+        }
+    }
+</script>
+
+  <div class="card border-light shadow-sm py-4">
+      <div class="row justify-content-center">
+          <div class="col-12 col-lg-10 col-xl-8">
+                <div class="card-header border-0 text-center justify-content-center">
+                  <h2 class="h3">Frequently asked questions</h2>
+                </div>
+                <div class="card-body mb-1">
+                    <!--Accordion-->
+                    <div class="accordion" id="accordionPricing">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    What happens when I cancel my subscription?
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    When you cancel your paid subscription, you will still have full access to the functionality you subscribed to until the end of your billing period. After you billing period end date, your account will go back to the regular plan. You will not lose any of your saved data sets, you will still be able to see all past transactions, and you will still (if you were an admin for your account) be able to manage all users in your user pool.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    How am I charged when I add a user to my account?
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    If you have not yet upgraded your account and have started adding users, you will not be charged for adding them. Once you have started a subscription, you will be billed for the price of the subscription times the number of users you have under one account (including your own). For example, you've invited 5 users to your account so there are 6 in your pool including yourself. When you choose to upgrade to the monthly tier, you will be charged $1,500 for each the 6 users, which is $9,000. When a user is added, after you've subscribed, you'll be charged immediately at a prorated rate based on your next invoice due date. If you're adding a user and you have a credit from switching from an annual plan to a monthly plan, the credit WILL <b>NOT</b> BE APPLIED. Credits are only for the recurring subscription, not for adding or removing users. You can change users' names and emails in the User dashboard if you decide to recycle a spot.
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    Which users have access to make changes to the subscription?
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    Only account admins have access to make changes to the subscription. After an account has upgraded, you are able to invite users and promote them to admins so there can be several on your account.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    What happens when a user is removed?
+                                </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    Their account is deleted and removed from the subscription. This changes the amount you'll be charged each billing cycle. There are two important things to keep in mind; deleting a user is irreversable meaning all their data is deleted and cannot be brought back and; when a user is deleted, unused time from the billing cycle is not reimbursed nor treated as a credit towards the next invoice.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFive">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                    Can I change from a monthly to an annual plan?
+                                </button>
+                            </h2>
+                            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    Yes, you can switch from monthly billing to annual billing and is encouraged since it saves you money! You will immediately switch from the monthly plan to the annual one which will change the next billing date. If you have unused time for your next bill before you upgrade to the annual plan, it will be treated as a credit towards your new annual rate. For example, if you have subscribed for the monthly billing cycle on March 1st, you will be billed on April 1st. You realize on March 15th you want to upgrade to the annual plan to save money, which means you have 16 unused days (March 16th through March 31st) of your billing cycle. These 16 days of unused time will be taken off your total bill when switching to the annual plan.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingSix">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                                    Can I change from an annual to a monthly plan?
+                                </button>
+                            </h2>
+                            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    Yes, you can switch from an annual plan to a monthly one. If you were to choose this, you will receive a credit that's based on the prorated amount of time remaining on your annual subscription. This credit will be applied to future invoices until the credit runs out. Once the credit has depleted, then you will be charged normally. It is not equivalent to the upcoming annual bill because there needs to be at least one month paid for in advance (like when registering for the monthly plan originally).
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingSeven">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                                    Can I add users after I cancel my subsciption?
+                                </button>
+                            </h2>
+                            <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordionPricing">
+                                <div class="accordion-body">
+                                    No, you cannot add users after you've canceled your plan. If you want to add users to your plan for upgraded access, you must reinstate your account.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--End of Accordion-->
+              </div>
+                  <p class="text-gray text-center justify-content-center">If you have other questions or are running into issues, don't hesitate to reach out to <a class="text-black text-underline fw-bold" href="mailto:<Super Loud Support> support@superloud.com">support@superloud.com</a></p>
+          </div>
+      </div>
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

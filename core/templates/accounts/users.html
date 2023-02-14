@@ -1,0 +1,259 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Users {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+{% if subobj.canceled_at == None %}
+<div class="row">
+    <div class="d-flex justify-content-center mb-2 mb-md-0">
+        <button class="btn btn-primary col-3" type="button" data-bs-toggle="modal" data-bs-target="#modal-default3" data-bs-backdrop="static">
+            New User
+        </button>
+    </div>
+</div>
+<br>
+{% endif %}
+
+<div class="modal" id="modal-default3" tabindex="-1" role="dialog" aria-labelledby="modal-default3" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                New User Creation
+            </div>
+            <div class="modal-body">
+                {% if message %}
+                <div class="alert alert-primary" role="alert">
+                    {{message}}
+                </div>
+                {% endif %}
+                <form method="POST" id="user-form">{% csrf_token %}
+                    <input type="hidden" name="formtype" value="a">
+                    <input class="form-control" type="text" placeholder="Username" name="username" required>
+                    <br>
+                    <div class="input-group">
+                        <input class="form-control" type="email" placeholder="Email" name="email" required oninput="change_in_email_length2(this)" maxlength="40">
+                        <span class="input-group-text" id="basic-addon4-count">0/40</span>
+                    </div>
+                    <br>
+                    <input class="form-control" type="password" placeholder="Password" name="password" required>
+                    <br>
+                    <input class="form-control" type="password" placeholder="Confirm Password" name="password2" required>
+                    <br>
+                    <input class="form-check-input" type="checkbox" value="" id="remember" required>
+                    <label class="form-check-label mb-0" for="remember">
+                        Agree to <a href="{% url 'terms' %}" target="_blank"><u>Terms and Conditions</u></a>
+                    </label>
+                    <br>
+                    <script>
+                        function change_in_email_length2(a){
+                            leng = a.value.length;
+                            document.getElementById('basic-addon4-count').innerText = leng+"/40";
+                        }
+                    </script>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" form="user-form" >Create</button>
+                <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-default3').toggle('modal');">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-default4" tabindex="-1" role="dialog" aria-labelledby="modal-default4" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                Are you sure you want to change this email and resend verification Email?
+            </div>
+            <div class="modal-body">
+                {% if message2 %}
+                <div class="alert alert-primary" role="alert">
+                    {{message2}}
+                </div>
+                {% endif %}
+                <form method="POST" id="email-form">{% csrf_token %}
+                    <input type="hidden" name="formtype" value="b">
+                    <input type="hidden" name="id" id="change-email-id" value="{{retid}}">
+                    <div class="input-group">
+                        <input class="form-control" type="email" placeholder="Email" name="email" maxlength="40" required oninput="change_in_email_length(this)">
+                        <span class="input-group-text" id="basic-addon3-count">0/40</span>
+                    </div>
+                    <script>
+                        function change_in_email_length(a){
+                            leng = a.value.length;
+                            document.getElementById('basic-addon3-count').innerText = leng+"/40";
+                        }
+                    </script>
+                    <br>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" form="email-form" >Change Email</button>
+                <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-default4').toggle('modal');">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <div class="modal" id="modal-default2" tabindex="-1" role="dialog" aria-labelledby="modal-default2" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <input type="hidden" id="del-id" form="sub-form">
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to delete the user : <span id="this-is-user" class="text-danger"></span>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="thisfunc()">Yes</button>
+                    <button type="button" class="btn btn-link text-gray ms-auto" data-bs-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        if ( window.history.replaceState ) {
+            window.history.replaceState( null, null, window.location.href );
+        }
+        function thisfunc(){
+            window.location.href = '/delete-user/' + document.getElementById('del-id').value;
+        }
+        function delfunc(a,b){
+            document.getElementById('del-id').value = a;
+            document.getElementById('this-is-user').innerText = b;
+            $('#modal-default2').modal('toggle');
+        }
+        {% if message %}
+        $(document).ready(function (){
+            $('#modal-default3').toggle('modal');
+        });
+        {% endif %}
+        {% if message2 %}
+        $(document).ready(function (){
+            $('#modal-default4').toggle('modal');
+        });
+        {% endif %}
+    </script>
+
+    {% if subobj.canceled_at == None %}
+    {% if objs|length <= 1 %}
+    <div class="col-12 col-sm-6 col-xl-4 mb-4 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-center">
+                    It's just you... Let's invite some users!
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %} 
+    {% else %}
+    <div class="col-12 col-sm-6 col-xl-4 mb-4 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-center">
+                    Please reinstate your account on the pricing page to add new users
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}  
+  
+    {% if objs|length > 0 %}
+    <div class="card card-body shadow-sm table-wrapper table-responsive">
+      <table class="table user-table table-hover align-items-center">
+            <thead class="thead-light">
+                <tr>
+                    <th class="border-bottom">Name</th>						
+                    <th class="border-bottom" style="text-align: center;">Date Created</th>
+                    <th class="border-bottom" style="text-align: center;">Verified</th>
+                    <th class="border-bottom" style="text-align: center;">User Privilege Type</th>
+                    <th class="border-bottom" style="text-align: center;">Make Admin</th>
+                    <th class="border-bottom" style="text-align: center;">Delete User</th>
+                </tr>
+          </thead>
+          <tbody>
+              {% for i in objs %}
+                    <tr>
+                        <td>
+                            <a class="d-flex align-items-center">
+                                <div class="d-block">
+                                    <span class="fw-bold">{{i.user.username}}</span>
+                                    <div class="small text-gray">{{i.user.email}}
+                                        {% if i.is_superadmin == False and i.is_admin == False %}
+                                            <span class="fa fa-edit" onclick="modal_4_open('{{i.id}}')"></span>
+                                        {% endif %}
+
+                                    </div>
+                                    <script>
+                                        function modal_4_open(a){
+                                            $('#modal-default4').toggle('modal');
+                                            $('#change-email-id').val(a);
+                                        }
+                                    </script>
+                                </div>
+                            </a>
+                        </td>
+
+                        <td style="text-align: center;">
+                            <span class="fw-normal">{{i.user.date_joined.date}}</span>
+                        </td>  
+
+                        <td style="text-align: center;">
+                            <span class="fw-normal">
+                            {% if i.verified %}
+                            <span class="fa fa-check-circle text-success fa-lg me-2">
+                            {% else %}
+                            <span class="fa fa-times-circle text-danger fa-lg me-2">
+                            {% endif %}
+                        </td>
+
+                        <td style="text-align: center;">
+                            <span class="fw-normal">
+                                {% if i.is_superadmin %}
+                                Super User
+                                {% elif i.is_admin %}
+                                Admin
+                                {% else %}
+                                User
+                                {% endif %}
+                            </span>
+                        </td>     
+
+                        {% if i.is_superadmin or i.user == request.user %}
+                        <td style="text-align: center;"></td>
+                        {% else %}
+                        <td style="text-align: center;">
+                            {% if i.is_admin %}
+                            <a class="text-danger" href="{% url 'make-admin' i.id %}"><span class="fa fa-user-times me-2"></span>Demote to User</a>
+                            {% else %} 
+                            <a class="text-success" href="{% url 'make-admin' i.id %}"><span class="fa fa-user me-2"></span>Promote to Admin</a>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+
+                        <td style="text-align: center;">
+                            {% if i.is_superadmin  or i.user == request.user %}
+                            </td>
+                            {% else %}
+                            <a><span class="fa fa-times-circle fa-lg text-danger ms-2" title="Delete" data-bs-toggle="tooltip" onclick="delfunc('{{i.user.id}}','{{i.user.username}}')"></span></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+            {% endfor %}
+          </tbody>
+      </table>
+  </div>
+  {% endif %}
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

@@ -1,0 +1,169 @@
+.graph {
+  position: relative;
+  font-size: 0.875rem;
+  color: #29313d;
+}
+
+.graph > * + * {
+  margin-top: 1rem;
+}
+
+.graph .controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.graph .download-control button {
+  border: transparent;
+  background-color: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.graph .chart {
+  position: relative;
+}
+
+.graph .chart > svg {
+  display: block;
+  /*width: 100%; */
+  overflow: visible;
+}
+
+.graph .axis {
+  font: inherit;
+}
+
+.graph .axis .axis-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.graph .axis line,
+.graph .axis path {
+  color: #e0e0e1;
+}
+
+.graph .axis--y .domain {
+  display: none;
+}
+
+.graph .line-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graph .focus-line {
+  stroke-dasharray: 2;
+}
+
+.graph .focus-circle {
+  stroke: #fff;
+}
+
+.graph .chart-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.graph .super-loud-logo {
+  width: 150px;
+  flex: none;
+  margin-top: auto;
+}
+
+.graph .super-loud-logo > svg {
+  display: block;
+}
+
+.graph .legend {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-width: 12rem;
+}
+
+.graph .legend .item__input {
+  position: absolute;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+}
+
+.graph .legend .item__label {
+  display: flex;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.graph .legend .item__input:checked + .item__label {
+  opacity: 1;
+}
+
+.graph .legend .item__swatch {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.375rem;
+  transform: translateY(25%);
+}
+
+.graph .tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(46, 54, 80, 0.125);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px rgb(140 152 164 / 20%);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+
+.graph .tip.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.graph .tip table {
+  border-collapse: collapse;
+  border-color: transparent;
+}
+
+.graph .tip td {
+  vertical-align: top;
+  padding-top: 0.5rem;
+}
+
+.graph .tip td:not(:first-child) {
+  padding-left: 0.375rem;
+}
+
+.graph .tip .tip__item__swatch > div {
+  width: 1em;
+  height: 1em;
+  transform: translateY(25%);
+}
+
+.graph .tip .tip__item__name {
+  max-width: 20em;
+}
+
+.graph .tip .tip__item__value div {
+  position: relative;
+  top: -0.25rem;
+  padding-bottom: 0;
+  height: 1em;
+}
+
+.graph .tip .tip__item__value span {
+  font-weight: 600;
+  font-size: 1.125rem;
+}

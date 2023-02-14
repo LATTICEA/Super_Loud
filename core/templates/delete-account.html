@@ -1,0 +1,64 @@
+{% extends "layouts/base-presentation.html" %}
+
+{% block title %} Presentation {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    {% load static %}
+    <main>
+        <!-- Hero -->
+        <section class="section-header overflow-hidden bg-primary text-white" style="padding:0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <img src="{% static 'assets/img/brand/Super Loud Logo-A10.png' %}">
+                        <div class="centered" style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%); padding:0;">
+                            <h1 class="fw-bolder centered" style="font-size:800%;">Delete Your Account</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <figure class="position-absolute bottom-0 left-0 w-100 d-none d-md-block mb-n2"><svg class="fill-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 185.4"><path d="M3000,0v185.4H0V0c496.4,115.6,996.4,173.4,1500,173.4S2503.6,115.6,3000,0z"></path></svg></figure>     
+  
+        </section>
+
+        <section class="section">
+            <div class="container" style="max-width:90%;">
+                <div class="row justify-content-center mb-2">
+                    <div class="col-12 text-center">
+                        <p>
+                            We're bummed to see you go, but thanks a lot for giving us a try! Just a couple of notes, if you delete your account, <b>YOU WILL NOT BE ABLE TO GET IT BACK!</b> Please make absolute sure you want to delete your account before pushing that button and confirming. Secondly, if you have multiple users in your account, by deleting your account, <b>YOU WILL DELETE ALL OTHER ACCOUNTS!</b> If you need to have another admin delete only your user, have them go to the <a class="text-black text-underline" href="{% url 'user-list' %}"><b>Users List</b></a> page and make that change for you. Once your account is deleted, you will not be able to access current users, transactions, datasets, or anything else. This change is irreversible and immediate.
+                        </p>
+                    </div>
+                    <a href="#" class="btn btn-sm btn-danger" data-bs-target="#modal-default4" data-bs-toggle="modal" id="tobe"></span><b>Delete Account</b></a>
+                </div>
+            </div>
+
+
+            <div class="modal" id="modal-default4" tabindex="-1" role="dialog" aria-labelledby="modal-default4" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            Account Deletion Confirmation
+                        </div>
+                        <div class="modal-body text-center">
+                            Are you sure you want to delete your account and all accounts associated with it?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" form="user-form" onclick="window.location.href='/delete-account-completely/{{request.user.id}}'">Yes</button>
+                            <button type="button" class="btn btn-primary text-gray ms-auto" data-bs-dismiss="modal" onclick="$('#modal-default4').toggle('modal');">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

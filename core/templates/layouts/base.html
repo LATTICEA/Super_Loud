@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>
+        Super Loud
+    </title>
+
+    {% load static %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/img/favicon/Favicon Square A11.ico'%}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/img/favicon/Favicon Square A11.ico'%}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/img/favicon/Favicon Square A11.ico'%}">
+    <link rel="manifest" href="{% static 'assets/img/favicon/site.webmanifest' %}">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link type="text/css" href="{% static 'assets/vendor/choices.js/public/assets/styles/choices.min.css' %}" rel="stylesheet"> 
+    <link type="text/css" href="{% static 'assets/css/volt.css' %}" rel="stylesheet">
+    <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet">
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+</head>
+<body>
+    {% include 'includes/navigation_02.html' %} 
+    
+    <main class="content" style="margin-left: 0; margin-top: 4rem; margin-bottom:50px;">
+
+        {% block content %}{% endblock content %}
+    
+    </main>
+    
+</body>
+    {% if obj.is_admin == True %}
+        {% include 'includes/footer_02.html' %} 
+    {% else %}
+        {% include 'includes/footer.html' %}
+    {% endif %}
+
+    {% include 'includes/scripts.html' %}
+    
+    <!-- Specific Page JS goes HERE  -->
+    {% block javascripts %}{% endblock javascripts %}
+
+</html>

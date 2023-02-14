@@ -1,0 +1,124 @@
+
+{% if request.user.username %}
+            <nav class="navbar fixed-top navbar-expand navbar-dashboard navbar-dark bg-dark text-white pl-1 pr-1 pb-0 pt-0" style="border-radius:0;">
+            <!-- <nav class="d-md-block bg-dark text-white"> -->
+                <div class="container-fluid px-0">
+                    <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+                        <div class="d-flex align-items-center">
+                            <li class="nav-item" style="list-style-type: none;">
+                                <a href="/" class="nav-link">
+                                <span class="sidebar-icon">
+                                    <span class="fa fa-home fa-lg"></span>
+                                </span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item {% if 'superloud_template' in segment %} active {% endif %}" style="list-style-type: none;">
+                                <a href="{% url 'subscriptions' %}" class="nav-link">
+                                    <span class="sidebar-text">Datasets</span>
+                                </a>
+                            </li>
+                            {% if obj.is_admin or request.isadmin %}
+                            {% if subobj.active is None or subobj.active == False %}
+                            <li class="nav-item {% if 'payments' in segment %} active {% endif %}" style="list-style-type: none;">
+                                <a href="{% url 'pricing-page' %}" class="nav-link">
+                                <span class="sidebar-text">Upgrade</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endif %}
+
+                            <span class=" d-none">
+                            {% if debug %}
+                            Admin: {{obj.is_admin}}
+                            Super Admin: {{obj.is_superadmin}}
+                            Verified: {{obj.verified}}
+                            Active: {{subobj.active}}
+                            Sub: {{subobj.subtype}}
+                            Period: {{subobj.periodtype}}
+                            Cancel At: {{subobj.cancel_at}}
+                            Canceled At: {{subobj.canceled_at}}
+                            Sub ID: {{subobj.id}}
+                            ID: {{obj.id}}
+                            Env: {{environment}}
+                            </span>
+                            {% endif %}
+                            
+                        </div>
+                        <!-- Navbar links -->
+                        <ul class="navbar-nav align-items-center" style="padding-right:1rem;"> 
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle pt-1 px-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="media d-flex align-items-center">                             
+                                    <div class="media-body ms-2 text-dark align-items-center">
+                                    <span class="mb-0 font-small fw-bold text-white">
+                                        {{ request.user.username }}
+                                    </span>
+                                    </div>
+                                </div>
+                                </a>
+                                <div class="dropdown-menu dashboard-dropdown dropdown-menu-end mt-2 py-0">
+                                    {% if obj.is_admin or request.isadmin %}
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'user-list' %}">
+                                        <span class="fa fa-users text-dark"></span>Users List
+                                    </a>
+                                    
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'transactions' %}">
+                                        <span class="fa fa-money text-dark"></span>Transactions
+                                    </a>
+
+                                    {% if obj.is_admin and subobj.active %}
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'pricing-page' %}">
+                                        <span class="fa fa-rocket text-dark"></span>My Subscription
+                                    </a>
+                                    {% else %}
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'pricing-page' %}">
+                                        <span class="fa fa-rocket text-dark"></span>Upgrade
+                                    </a>
+                                    {% endif %}
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'logout' %}">
+                                        <span class="fa fa-sign-in text-danger"></span>Logout
+                                    </a>
+                                    {% else %}
+                                    <a class="dropdown-item rounded-bottom rounded-top fw-bold text-dark" href="{% url 'logout' %}">
+                                        <span class="fa fa-sign-in text-danger"></span>Logout
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+{% else %}
+            <nav class="navbar fixed-top navbar-expand navbar-dashboard navbar-dark bg-dark text-white pl-1 pr-1 pb-0 pt-0" style="border-radius:0;">
+            <!-- <nav class="d-md-block bg-dark text-white"> -->
+                <div class="container-fluid px-0">
+                    <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+                        <div class="d-flex align-items-center">
+                            <li class="nav-item" style="list-style-type: none;">
+                                <a href="/" class="nav-link">
+                                <span class="sidebar-icon">
+                                    <span class="fa fa-home fa-lg"></span>
+                                </span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item" style="list-style-type: none;">
+                                <a href="{% url 'register' %}" class="nav-link">
+                                    <span class="sidebar-text">Sign Up</span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item" style="list-style-type: none;">
+                                <a href="{% url 'login' %}" class="nav-link">
+                                    <span class="sidebar-text">Login</span>
+                                </a>
+                            </li>
+
+
+                        </div>
+                    </div>
+                </div>
+            </nav>
+{% endif %}
